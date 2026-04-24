@@ -6,22 +6,22 @@ Luffy is a cybersecurity IAM learning lab that simulates how identity, governanc
 
 The goal is not to clone any enterprise product. The goal is to rebuild smaller safe versions of the important IAM and cybersecurity concepts.
 
-## Correct architecture principle
+## Architecture principle
 
 Use the right pattern in the right place:
 
 ```text
-HRMS                 -> REST + database later
-IdP                  -> GraphQL + REST login
-IGA                  -> GraphQL
-JDBC target          -> SQL/JDBC
-Web Services target  -> REST + cloud DB later
-SCIM target          -> SCIM 2.0 SaaS pattern
-PAM target           -> REST/PAM-style APIs
-API gateway/WAF      -> REST posture and inspection APIs
-SIEM detection       -> event ingestion APIs
-Desktop agent        -> desktop/client app later
-AI agents            -> later, after clean data exists
+HRMS                  -> REST + database later
+IdP                   -> GraphQL + REST login
+IGA                   -> GraphQL
+JDBC target           -> SQL/JDBC
+Web Services target   -> REST + cloud DB later
+SCIM target           -> SCIM 2.0 SaaS pattern
+PAM target            -> REST/PAM-style APIs
+API security gateway  -> REST posture and inspection APIs
+SIEM detection        -> event ingestion APIs
+Desktop agent         -> desktop/client app later
+AI agents             -> later, after clean data exists
 ```
 
 ## High-level flow
@@ -45,7 +45,7 @@ Target apps
   -> pam-target
 
 Security layer
-  -> api-gateway-waf
+  -> api-security-gateway
   -> siem-detection-service
 
 Endpoint layer later
@@ -71,14 +71,15 @@ AI layer later
         | jdbc-target    |                    | webservices-target |             | scim-target    |
         | SQL/JDBC       |                    | REST + cloud DB    |             | SaaS + SCIM    |
         +----------------+                    +--------------------+             +----------------+
-                 |
-                 |                                      +----------------+
-                 +------------------------------------> | pam-target     |
-                                                        | PAM + audit    |
-                                                        +----------------+
+                 |                                      |
+                 |                                      v
+                 |                             +----------------+
+                 +---------------------------> | pam-target     |
+                                               | PAM + audit    |
+                                               +----------------+
 
                          +----------------------+
-                         | api-gateway-waf      |
+                         | api-security-gateway |
                          | posture/monitor/block|
                          +----------+-----------+
                                     |
@@ -251,9 +252,9 @@ Purpose:
 Learn privileged access governance, JIT access, checkout approval, and session audit.
 ```
 
-### api-gateway-waf
+### api-security-gateway
 
-Acts like API security posture and optional enforcement layer.
+Acts like an API security posture and optional enforcement layer.
 
 Pattern:
 
@@ -340,7 +341,7 @@ jdbc-target
 webservices-target
 scim-target
 pam-target
-api-gateway-waf
+api-security-gateway
 siem-detection-service
 ```
 
@@ -418,7 +419,7 @@ Agents should explain, recommend, summarize, and flag risk. They should not sile
 ### Milestone 3 - API security and detection
 
 ```text
-8. api-gateway-waf
+8. api-security-gateway
 9. siem-detection-service
 ```
 
