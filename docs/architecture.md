@@ -2,15 +2,16 @@
 
 ## Purpose
 
-Luffy is a practical IAM integration lab that simulates how an IGA platform such as SailPoint governs different application integration patterns.
+Luffy is a practical cybersecurity IAM integration lab that simulates how an IGA platform such as SailPoint governs different application integration patterns, including privileged access management.
 
-The lab focuses on five components:
+The lab focuses on six components:
 
 1. Identity Provider service
 2. SailPoint-like IGA service
 3. SCIM target application
 4. JDBC/DBMS target application
 5. Web Services target application
+6. PAM target application
 
 ## Architecture
 
@@ -25,15 +26,15 @@ The lab focuses on five components:
                                   v
 +----------------------+   +------+-------------------+   +----------------------+
 | scim-target          |   |      iga-service         |   | webservices-target   |
-| SCIM users/groups    |<->| Aggregation              |<->| REST users/roles     |
+| Endpoint security    |<->| Aggregation              |<->| Risk + incident APIs |
 | SCIM provisioning    |   | Correlation              |   | API provisioning     |
 +----------------------+   | Access request           |   +----------------------+
                            | Approval workflow        |
-+----------------------+   | Provisioning             |
-| jdbc-target          |<->| Governance reports       |
-| DB tables/views      |   +--------------------------+
-| Users/roles mapping  |
-+----------------------+
++----------------------+   | Provisioning             |   +----------------------+
+| jdbc-target          |<->| Privileged governance    |<->| pam-target           |
+| Security assets DB   |   | Governance reports       |   | Vaults + sessions    |
+| Users/roles mapping  |   +--------------------------+   | Checkout + audit     |
++----------------------+                                  +----------------------+
 ```
 
 ## Components
@@ -61,11 +62,12 @@ Responsibilities:
 - Maintain entitlement catalog
 - Handle access requests and approvals
 - Provision approved access
+- Govern privileged access
 - Generate governance and certification-style reports
 
 ### scim-target
 
-Simulates a modern SaaS application with SCIM 2.0-style APIs.
+Simulates a modern endpoint security platform with SCIM 2.0-style APIs.
 
 Responsibilities:
 
@@ -76,7 +78,7 @@ Responsibilities:
 
 ### jdbc-target
 
-Simulates a database-backed internal or legacy application.
+Simulates a database-backed security asset operations platform.
 
 Responsibilities:
 
@@ -94,7 +96,7 @@ vw_iam_account_entitlements
 
 ### webservices-target
 
-Simulates a custom application that exposes REST APIs instead of SCIM.
+Simulates a security risk and incident platform that exposes REST APIs instead of SCIM.
 
 Responsibilities:
 
@@ -102,6 +104,20 @@ Responsibilities:
 - Expose roles APIs
 - Expose role assignment APIs
 - Demonstrate Web Services connector-style aggregation and provisioning
+
+### pam-target
+
+Simulates a CyberArk-like Privileged Access Management platform.
+
+Responsibilities:
+
+- Store privileged safes/vaults
+- Store privileged accounts
+- Manage safe membership
+- Support privileged credential checkout requests
+- Support approval for privileged access
+- Record privileged sessions
+- Generate PAM audit events
 
 ## Normalized IGA model
 
@@ -115,6 +131,11 @@ Assignment
 AccessRequest
 Approval
 ProvisioningEvent
+PrivilegedSafe
+PrivilegedAccount
+CheckoutRequest
+PrivilegedSession
+AuditEvent
 ```
 
 ## Build order
@@ -122,5 +143,6 @@ ProvisioningEvent
 1. `jdbc-target` - simplest way to understand accounts, roles, and mappings
 2. `webservices-target` - custom REST API integration pattern
 3. `scim-target` - standard SCIM provisioning pattern
-4. `idp-service` - authoritative identity source
-5. `iga-service` - aggregation, correlation, request, approval, provisioning
+4. `pam-target` - privileged access, vault, checkout, and audit pattern
+5. `idp-service` - authoritative identity source
+6. `iga-service` - aggregation, correlation, request, approval, provisioning, and governance
