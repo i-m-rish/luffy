@@ -25,7 +25,7 @@ Agents later, after clean data and APIs exist.
 | `webservices-target` | Custom cloud/security risk app | REST + cloud DB later | REST/Web Services connector pattern |
 | `scim-target` | SaaS endpoint security app | SCIM 2.0 | SaaS provisioning pattern using users/groups |
 | `pam-target` | CyberArk-like PAM | REST + audit data | Safes, privileged accounts, checkout, sessions, audit |
-| `api-gateway-waf` | API security posture gateway | REST | SSL/TLS, auth, headers, CORS, posture scan, monitor/enforce |
+| `api-security-gateway` | API security posture gateway | REST | SSL/TLS, auth, headers, CORS, posture scan, monitor/enforce |
 | `siem-detection-service` | SIEM/detection platform | Event ingestion API | Events, alerts, detections, investigations |
 | `desktop-agent-app` | Endpoint desktop agent | Desktop/client app later | Device posture, heartbeat, machine identity, local events |
 
@@ -41,7 +41,7 @@ luffy/
 │   ├── webservices-target/
 │   ├── scim-target/
 │   ├── pam-target/
-│   ├── api-gateway-waf/
+│   ├── api-security-gateway/
 │   ├── siem-detection-service/
 │   └── desktop-agent-app/
 ├── docs/
@@ -69,12 +69,12 @@ Identity -> groups -> apps -> accounts -> entitlements -> approvals -> risks.
 Do not force GraphQL into every target app. Target apps should keep their realistic integration style:
 
 ```text
-jdbc-target          -> SQL/JDBC
-webservices-target   -> REST
-scim-target          -> SCIM
-pam-target           -> REST/PAM-style APIs
-api-gateway-waf      -> REST
-siem-detection       -> event API
+jdbc-target            -> SQL/JDBC
+webservices-target     -> REST
+scim-target            -> SCIM
+pam-target             -> REST/PAM-style APIs
+api-security-gateway   -> REST
+siem-detection         -> event API
 ```
 
 ## Build order
@@ -111,7 +111,7 @@ Show REST, SCIM, and PAM onboarding/governance patterns.
 ### Milestone 3 - Security control and detection
 
 ```text
-8. api-gateway-waf
+8. api-security-gateway
 9. siem-detection-service
 ```
 
