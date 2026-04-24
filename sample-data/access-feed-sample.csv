@@ -1,6 +1,0 @@
-employee_id,lan_id,email,account_name,entitlement,application_name,owner
-1001,RSINGH01,rishabh.singh@example.com,RSINGH01,Viewer,CFZ,AppOwner1
-1002,AKUMAR01,amit.kumar@example.com,AKUMAR01,Admin,CFZ,AppOwner1
-1003,,neha.sharma@example.com,NSHARMA01,Viewer,CFZ,AppOwner1
-1004,PKAPOOR01,,pkapoor01,Editor,CFZ,AppOwner1
-1005,AKUMAR01,amit.kumar@example.com,AKUMAR01,Admin,CFZ,AppOwner1
