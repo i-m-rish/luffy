@@ -4,7 +4,7 @@
 
 The API security control plane checks whether API security is implemented correctly across the Luffy IAM Lab.
 
-It is mainly an inspection and security posture layer. It usually observes, validates, and reports. It can also enforce controls when configured to do so through allowlists, blocklists, or policy rules.
+It is mainly an inspection, posture discovery, and security validation layer. It usually observes, validates, and reports. It can also enforce controls when configured to do so through allowlists, blocklists, rate limits, or policy rules.
 
 ## Core idea
 
@@ -23,54 +23,203 @@ This allows the lab to compare:
 ```text
 What happens when traffic goes directly to the app?
 What happens when traffic is inspected by the API security layer first?
+What security posture does each app expose?
 ```
 
 ## New components
 
 | Service | Type | Purpose |
 |---|---|---|
-| `api-gateway-waf` | API security inspection and optional enforcement layer | Checks API requests/responses and can allow, log, warn, rate-limit, or block |
+| `api-gateway-waf` | API security inspection, posture scanning, and optional enforcement layer | Checks API requests, responses, protocol posture, headers, auth, and risky behavior |
 | `siem-detection-service` | Event monitoring and detection layer | Collects events from all services and finds suspicious patterns |
 
 ## Component 1: api-gateway-waf
 
-`api-gateway-waf` acts like an API security gateway.
+`api-gateway-waf` acts like an API security gateway and posture scanner.
 
 It checks whether basic API security expectations are being followed.
 
-It can work in two modes:
+It can work in three modes:
 
 ```text
+DISCOVERY_MODE
+  Scan app endpoint metadata and security posture
+  Report protocol, TLS, auth, headers, exposed endpoints, and risky defaults
+
 MONITOR_MODE
-  Inspect request
-  Record security finding
+  Inspect live request/response traffic
+  Record security findings
   Forward request even if issue exists
 
 ENFORCE_MODE
-  Inspect request
+  Inspect live request/response traffic
   Apply allowlist/blocklist/policy rules
   Stop request if rule requires blocking
 ```
 
-## What api-gateway-waf checks
+## API security posture discovery
 
-### API security posture checks
+The gateway should be able to detect and record the security posture of each app.
+
+### Protocol and transport checks
 
 ```text
-Is authentication required?
-Is Authorization header present?
-Is token format valid?
-Is the endpoint public or protected?
-Is the HTTP method allowed?
-Is the content type valid?
-Is the payload schema valid?
-Is the request body too large?
-Are sensitive fields exposed?
-Are unsafe query parameters used?
+Is the app using HTTP or HTTPS?
+Which TLS/SSL protocol version is used?
+Is TLS 1.2 or TLS 1.3 used?
+Are deprecated protocols such as SSLv3, TLS 1.0, or TLS 1.1 exposed?
+Is the certificate valid?
+Is the certificate expired?
+Is the certificate self-signed?
+Does the certificate common name / SAN match the host?
+Is weak cipher usage simulated or reported?
+Is HSTS configured?
+```
+
+For the lab, this can initially be simulated through service metadata instead of real TLS scanning.
+
+Example posture metadata:
+
+```json
+{
+  "service": "pam-target",
+  "base_url": "https://pam-target.local",
+  "protocol": "HTTPS",
+  "tls_version": "TLS1.2",
+  "certificate_status": "VALID",
+  "hsts_enabled": true
+}
+```
+
+### API authentication checks
+
+```text
+Does the API require authentication?
+Which auth type is used?
+Bearer token?
+API key?
+Basic auth?
+Mutual TLS?
+No auth?
+Are tokens required on protected endpoints?
 Are admin endpoints protected?
-Are high-risk actions approved?
-Is the caller allowed to invoke this API?
-Are rate limits being respected?
+Are service-to-service calls authenticated?
+```
+
+Supported simulated auth types:
+
+```text
+NONE
+BASIC
+API_KEY
+BEARER_TOKEN
+OAUTH2_CLIENT_CREDENTIALS
+MTLS
+```
+
+### Authorization checks
+
+```text
+Is RBAC enforced?
+Are high-risk endpoints role-protected?
+Can normal users call admin endpoints?
+Can a requester approve their own access?
+Can unknown clients call PAM checkout APIs?
+Can IGA provisioning APIs be called by non-IGA services?
+```
+
+### Security header checks
+
+```text
+Strict-Transport-Security
+Content-Security-Policy
+X-Content-Type-Options
+X-Frame-Options
+Referrer-Policy
+Cache-Control
+Pragma
+```
+
+### CORS checks
+
+```text
+Is CORS enabled?
+Is wildcard origin allowed?
+Are credentials allowed with wildcard origin?
+Are allowed methods too broad?
+Are allowed headers too broad?
+```
+
+### Endpoint exposure checks
+
+```text
+Are debug endpoints exposed?
+Are admin endpoints exposed?
+Are health endpoints leaking sensitive data?
+Is API documentation exposed publicly?
+Are dangerous HTTP methods enabled?
+Are unauthenticated write endpoints exposed?
+```
+
+Dangerous methods to monitor:
+
+```text
+PUT
+PATCH
+DELETE
+TRACE
+OPTIONS
+```
+
+### Rate limit and abuse checks
+
+```text
+Is rate limiting configured?
+Is brute-force protection configured?
+Are repeated failed requests detected?
+Are checkout attempts against pam-target rate-limited?
+Are token requests rate-limited?
+```
+
+### Logging and audit checks
+
+```text
+Is request_id generated or required?
+Is actor logged?
+Is source service logged?
+Is target service logged?
+Is decision logged?
+Are high-risk actions audited?
+Are secrets excluded from logs?
+```
+
+### Data exposure checks
+
+```text
+Are passwords or secrets returned in responses?
+Are tokens exposed in logs?
+Are privileged account secrets exposed?
+Are excessive user attributes returned?
+Are internal errors returned to callers?
+```
+
+## Runtime request checks
+
+### Inbound request checks
+
+```text
+Who is calling?
+Which app are they calling?
+Which endpoint are they calling?
+Is the token present?
+Is the token valid?
+Is the method allowed?
+Is the payload valid?
+Is the request body too large?
+Is the user allowed to call this endpoint?
+Does the payload contain suspicious input?
+Is the caller sending too many requests?
+Is this a high-risk action?
 ```
 
 ### Injection and suspicious input checks
@@ -191,6 +340,39 @@ Read-only IAM views
 Least-privilege DB user
 No raw table access from IGA
 No unsafe dynamic SQL
+Connection encryption enabled
+Database audit logging enabled
+```
+
+## Posture score
+
+The gateway should produce a simple API security posture score for every protected app.
+
+Example categories:
+
+```text
+Transport security       20 points
+Authentication           20 points
+Authorization            20 points
+Input validation         15 points
+Security headers         10 points
+Rate limiting            5 points
+Audit logging            10 points
+```
+
+Example output:
+
+```json
+{
+  "service": "webservices-target",
+  "score": 72,
+  "rating": "MEDIUM",
+  "findings": [
+    "Missing HSTS header",
+    "No rate limit configured on token endpoint",
+    "Admin endpoint allows OPTIONS method"
+  ]
+}
 ```
 
 ## Example flows
@@ -238,16 +420,73 @@ Decision: REQUIRE_STEP_UP.
 Request pauses until additional approval is completed.
 ```
 
+### Flow 5: Posture scan
+
+```text
+api-gateway-waf -> scim-target /security-metadata
+
+Gateway checks:
+- HTTPS enabled
+- TLS version
+- Auth type
+- Security headers
+- CORS policy
+- Rate limit policy
+- Exposed endpoints
+
+Output:
+API security posture score and findings
+```
+
 ## API design
 
 ```text
 POST /gateway/inspect-request
 POST /gateway/inspect-response
 POST /gateway/inspect-action
+POST /gateway/scan-posture
+GET  /gateway/posture-reports
 GET  /gateway/policies
 POST /gateway/policies
 GET  /gateway/events
 GET  /gateway/findings
+```
+
+## Example posture scan request
+
+```json
+{
+  "service": "pam-target",
+  "base_url": "https://pam-target.local",
+  "scan_type": "METADATA_BASED"
+}
+```
+
+## Example posture scan response
+
+```json
+{
+  "service": "pam-target",
+  "score": 86,
+  "rating": "HIGH",
+  "transport": {
+    "protocol": "HTTPS",
+    "tls_version": "TLS1.2",
+    "certificate_status": "VALID",
+    "hsts_enabled": true
+  },
+  "auth": {
+    "auth_type": "OAUTH2_CLIENT_CREDENTIALS",
+    "protected_endpoints": true
+  },
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "title": "TLS 1.3 not enabled",
+      "recommendation": "Enable TLS 1.3 where supported"
+    }
+  ]
+}
 ```
 
 ## Example inspection request
@@ -311,6 +550,9 @@ Orphan account still has active entitlement
 Privileged account accessed by unmatched identity
 Multiple privilege escalations in short time
 Dormant account still active in target app
+Weak API security posture on critical apps
+TLS downgrade or weak protocol posture
+Protected endpoint called without required security headers
 ```
 
 ## Detection examples
@@ -326,6 +568,8 @@ DET-007: Emergency access used without follow-up review
 DET-008: Critical role provisioned outside change window
 DET-009: Protected API called without required security headers
 DET-010: Multiple injection-like payloads from same source
+DET-011: Critical app has weak API security posture score
+DET-012: Deprecated TLS protocol detected
 ```
 
 ## Updated architecture
@@ -337,6 +581,7 @@ DET-010: Multiple injection-like payloads from same source
                          +----------------------+
                          |   api-gateway-waf    |
                          | API security checks  |
+                         | Posture scan         |
                          | Monitor / enforce    |
                          +----------+-----------+
                                     |
@@ -363,7 +608,8 @@ DET-010: Multiple injection-like payloads from same source
 
 ```text
 api-gateway-waf
-  Checks API security for inbound and outbound traffic.
+  Discovers API security posture.
+  Checks SSL/TLS, protocol, auth, headers, CORS, endpoint exposure, payloads, and runtime traffic.
   Usually monitors and reports.
   Can enforce through allowlists, blocklists, rate limits, and policy rules.
 
