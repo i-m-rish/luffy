@@ -84,6 +84,11 @@ pam-target
   auth_protocol: SAML
   sso_enabled: true
 
+api-security-gateway
+  app_name: API Security Gateway
+  auth_protocol: OIDC
+  sso_enabled: true
+
 luffy-iga
   app_name: Luffy IGA Governance
   auth_protocol: OIDC
@@ -152,7 +157,7 @@ pam-target
   integration_pattern: PAM
   purpose: privileged access governance
 
-api-gateway-waf
+api-security-gateway
   integration_pattern: API_SECURITY_POSTURE
   purpose: API posture findings and enforcement events
 
@@ -172,7 +177,7 @@ siem-detection-service
 | `webservices-target` | Yes | Yes | Has login/API access and governable roles |
 | `scim-target` | Yes | Yes | Has SSO and SCIM users/groups |
 | `pam-target` | Yes | Yes | Has SSO and privileged access governance |
-| `api-gateway-waf` | Yes | Yes | Admin console access is governed; findings are monitored |
+| `api-security-gateway` | Yes | Yes | Admin console access is governed; posture findings are monitored |
 | `siem-detection-service` | Yes | Yes | Analyst/admin console access is governed; alerts are consumed |
 
 ## Correct mental model
