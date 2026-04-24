@@ -14,6 +14,22 @@ REST/SCIM/SQL where those patterns are realistic.
 Agents later, after clean data and APIs exist.
 ```
 
+## Security and responsible AI baseline
+
+Before implementation, every service must follow the project guardrails:
+
+```text
+Secure by default
+Least privilege everywhere
+No real secrets in code
+No real personal data
+Audit important actions
+Human approval for high-risk actions
+Agents recommend first; they do not silently provision or revoke
+```
+
+See [Secure by Design and Responsible AI Guardrails](docs/secure-by-design-and-responsible-ai.md).
+
 ## Services
 
 | Service | Acts like | Main API/data style | Purpose |
@@ -154,6 +170,7 @@ Agents explain risks, suggest reviews, summarize onboarding gaps, and recommend 
 
 - [Architecture](docs/architecture.md)
 - [Naming Standards](docs/naming-standards.md)
+- [Secure by Design and Responsible AI Guardrails](docs/secure-by-design-and-responsible-ai.md)
 - [App Registration Model](docs/app-registration-model.md)
 - [HRMS Service](docs/hrms-service.md)
 - [PAM Target](docs/pam-target.md)
