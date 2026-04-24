@@ -26,9 +26,13 @@ No real personal data
 Audit important actions
 Human approval for high-risk actions
 Agents recommend first; they do not silently provision or revoke
+NIST/OWASP-aligned API and authentication standards
 ```
 
-See [Secure by Design and Responsible AI Guardrails](docs/secure-by-design-and-responsible-ai.md).
+See:
+
+- [Secure by Design and Responsible AI Guardrails](docs/secure-by-design-and-responsible-ai.md)
+- [API and Authentication Standards](docs/api-authentication-standards.md)
 
 ## Services
 
@@ -171,6 +175,7 @@ Agents explain risks, suggest reviews, summarize onboarding gaps, and recommend 
 - [Architecture](docs/architecture.md)
 - [Naming Standards](docs/naming-standards.md)
 - [Secure by Design and Responsible AI Guardrails](docs/secure-by-design-and-responsible-ai.md)
+- [API and Authentication Standards](docs/api-authentication-standards.md)
 - [App Registration Model](docs/app-registration-model.md)
 - [HRMS Service](docs/hrms-service.md)
 - [PAM Target](docs/pam-target.md)
