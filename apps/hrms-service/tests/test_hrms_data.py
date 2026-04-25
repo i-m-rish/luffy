@@ -7,7 +7,7 @@ APP_DIR = Path(__file__).resolve().parents[1]
 SCRIPTS_DIR = APP_DIR / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
-from validate_data import load_json, validate_all  # noqa: E402
+from validate_hrms_data import load_json, validate_all  # noqa: E402
 
 
 def test_hrms_sample_data_validation_passes() -> None:
