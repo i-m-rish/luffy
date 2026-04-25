@@ -1,5 +1,37 @@
 # JDBC Target
 
+## Start here
+
+`jdbc-target` is a database-backed app used to learn the SailPoint/JDBC aggregation pattern.
+
+Simple mapping:
+
+```text
+users       -> accounts
+roles       -> entitlements
+user_roles  -> account-entitlement assignments
+```
+
+Simple flow:
+
+```mermaid
+flowchart LR
+    USERS[users] --> ACCOUNTS[vw_iam_accounts]
+    ROLES[roles] --> ENTS[vw_iam_entitlements]
+    USERROLES[user_roles] --> ASSIGN[vw_iam_account_entitlements]
+
+    ACCOUNTS --> IGA[iga-service later]
+    ENTS --> IGA
+    ASSIGN --> IGA
+```
+
+More details:
+
+- [Overview](docs/overview.md)
+- [Full diagrams](docs/diagrams.md)
+- [Data model](docs/data-model.md)
+- [SQL view contract](docs/sql-view-contract.md)
+
 ## Purpose
 
 `jdbc-target` simulates a database-backed security asset operations application.
@@ -41,6 +73,17 @@ apps/jdbc-target/
 │   ├── seed.sql
 │   └── views.sql
 ├── docs/
+│   ├── overview.md
+│   ├── diagrams.md
+│   ├── objectives.md
+│   ├── hld.md
+│   ├── dld.md
+│   ├── data-model.md
+│   ├── relationship-diagram.md
+│   ├── security-controls.md
+│   ├── audit-events.md
+│   ├── ui-decision.md
+│   └── sql-view-contract.md
 ├── scripts/
 │   └── run_sqlite.py
 └── tests/
