@@ -1,0 +1,169 @@
+enum ApplicationType {
+  HRMS
+  IDP
+  TARGET
+  PAM
+  SECURITY
+  IGA
+}
+
+enum IntegrationPattern {
+  JSON
+  JDBC
+  GRAPHQL
+  REST
+  SCIM
+  PAM_API
+  EVENT_API
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ApplicationStatus {
+  ACTIVE
+  INACTIVE
+  DESIGN
+  FUTURE
+}
+
+enum IdentityType {
+  HUMAN
+  MACHINE
+}
+
+enum IdentityStatus {
+  ACTIVE
+  DISABLED
+  TERMINATED
+  STAGED
+}
+
+enum AccountStatus {
+  ACTIVE
+  DISABLED
+  LOCKED
+  TERMINATED
+}
+
+enum CorrelationStatus {
+  MATCHED
+  PARTIAL
+  ORPHAN
+  NOT_EVALUATED
+}
+
+enum EntitlementStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AssignmentStatus {
+  ACTIVE
+  REVOKED
+}
+
+enum CorrelationResultType {
+  MATCHED
+  PARTIAL
+  ORPHAN
+}
+
+enum MatchAttribute {
+  employee_id
+  lan_id
+  email
+  NONE
+}
+
+enum Confidence {
+  HIGH
+  MEDIUM
+  LOW
+  NONE
+}
+
+type Application {
+  applicationId: ID!
+  applicationName: String!
+  applicationType: ApplicationType!
+  integrationPattern: IntegrationPattern!
+  riskLevel: RiskLevel!
+  status: ApplicationStatus!
+  owner: String!
+  accounts: [Account!]!
+  entitlements: [Entitlement!]!
+}
+
+type Identity {
+  identityId: ID!
+  employeeId: String
+  lanId: String!
+  email: String!
+  displayName: String!
+  identityType: IdentityType!
+  identityStatus: IdentityStatus!
+  sourceSystem: String!
+  accounts: [Account!]!
+}
+
+type Account {
+  accountId: ID!
+  application: Application!
+  identity: Identity
+  nativeAccountId: String!
+  employeeId: String
+  lanId: String
+  email: String
+  accountStatus: AccountStatus!
+  correlationStatus: CorrelationStatus!
+  assignments: [Assignment!]!
+  correlationResult: CorrelationResult
+}
+
+type Entitlement {
+  entitlementId: ID!
+  application: Application!
+  nativeEntitlementId: String!
+  entitlementName: String!
+  entitlementDescription: String!
+  riskLevel: RiskLevel!
+  status: EntitlementStatus!
+  assignments: [Assignment!]!
+}
+
+type Assignment {
+  assignmentId: ID!
+  account: Account!
+  entitlement: Entitlement!
+  assignmentStatus: AssignmentStatus!
+  assignedBy: String!
+  assignedAt: String!
+}
+
+type CorrelationResult {
+  correlationId: ID!
+  account: Account!
+  identity: Identity
+  result: CorrelationResultType!
+  matchAttribute: MatchAttribute!
+  confidence: Confidence!
+  reason: String!
+}
+
+type Query {
+  application(applicationId: ID!): Application
+  applications(status: ApplicationStatus): [Application!]!
+  identity(identityId: ID!): Identity
+  identityByEmployeeId(employeeId: String!): Identity
+  identities(status: IdentityStatus): [Identity!]!
+  account(accountId: ID!): Account
+  accounts(correlationStatus: CorrelationStatus): [Account!]!
+  entitlement(entitlementId: ID!): Entitlement
+  entitlements(riskLevel: RiskLevel): [Entitlement!]!
+  correlationResults(result: CorrelationResultType): [CorrelationResult!]!
+}
