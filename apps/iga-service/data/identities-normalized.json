@@ -1,0 +1,62 @@
+[
+  {
+    "identity_id": "IGA-IDENTITY-1001",
+    "employee_id": "1001",
+    "lan_id": "RSINGH01",
+    "email": "rishabh.singh@example.com",
+    "display_name": "Rishabh Singh",
+    "identity_type": "HUMAN",
+    "identity_status": "ACTIVE",
+    "source_system": "hrms-service"
+  },
+  {
+    "identity_id": "IGA-IDENTITY-1002",
+    "employee_id": "1002",
+    "lan_id": "AKUMAR01",
+    "email": "amit.kumar@example.com",
+    "display_name": "Amit Kumar",
+    "identity_type": "HUMAN",
+    "identity_status": "ACTIVE",
+    "source_system": "hrms-service"
+  },
+  {
+    "identity_id": "IGA-IDENTITY-1003",
+    "employee_id": "1003",
+    "lan_id": "NSHARMA01",
+    "email": "neha.sharma@example.com",
+    "display_name": "Neha Sharma",
+    "identity_type": "HUMAN",
+    "identity_status": "ACTIVE",
+    "source_system": "hrms-service"
+  },
+  {
+    "identity_id": "IGA-IDENTITY-1004",
+    "employee_id": "1004",
+    "lan_id": "PKAPOOR01",
+    "email": "priya.kapoor@example.com",
+    "display_name": "Priya Kapoor",
+    "identity_type": "HUMAN",
+    "identity_status": "ACTIVE",
+    "source_system": "hrms-service"
+  },
+  {
+    "identity_id": "IGA-IDENTITY-1005",
+    "employee_id": "1005",
+    "lan_id": "KMEHTA01",
+    "email": "karan.mehta@example.com",
+    "display_name": "Karan Mehta",
+    "identity_type": "HUMAN",
+    "identity_status": "ACTIVE",
+    "source_system": "hrms-service"
+  },
+  {
+    "identity_id": "IGA-IDENTITY-1006",
+    "employee_id": "1006",
+    "lan_id": "MNAIR01",
+    "email": "meera.nair@example.com",
+    "display_name": "Meera Nair",
+    "identity_type": "HUMAN",
+    "identity_status": "TERMINATED",
+    "source_system": "hrms-service"
+  }
+]
