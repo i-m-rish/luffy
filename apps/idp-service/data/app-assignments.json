@@ -1,0 +1,30 @@
+[
+  {
+    "app_assignment_id": "APPASN-IGA-ADMIN",
+    "app_registration_id": "APPREG-LUFFY-IGA",
+    "group_id": "GRP-SECURITY-ADMIN",
+    "assignment_status": "ACTIVE",
+    "assigned_at": "2026-01-10T10:30:00Z"
+  },
+  {
+    "app_assignment_id": "APPASN-SCIM-ASSET-VIEWER",
+    "app_registration_id": "APPREG-SCIM-TARGET",
+    "group_id": "GRP-ASSET-VIEWER",
+    "assignment_status": "ACTIVE",
+    "assigned_at": "2026-01-10T10:35:00Z"
+  },
+  {
+    "app_assignment_id": "APPASN-PAM-CHECKOUT",
+    "app_registration_id": "APPREG-PAM-TARGET",
+    "group_id": "GRP-PAM-CHECKOUT",
+    "assignment_status": "ACTIVE",
+    "assigned_at": "2026-02-01T10:30:00Z"
+  },
+  {
+    "app_assignment_id": "APPASN-API-SECURITY-ANALYST",
+    "app_registration_id": "APPREG-API-SECURITY-GATEWAY",
+    "group_id": "GRP-API-SECURITY-ANALYST",
+    "assignment_status": "ACTIVE",
+    "assigned_at": "2026-01-15T10:30:00Z"
+  }
+]
