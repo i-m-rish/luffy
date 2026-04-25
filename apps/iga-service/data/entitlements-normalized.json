@@ -1,0 +1,47 @@
+[
+  {
+    "entitlement_id": "IGA-ENT-JDBC-ASSET-VIEWER",
+    "application_id": "jdbc-target",
+    "native_entitlement_id": "1",
+    "entitlement_name": "Asset Viewer",
+    "entitlement_description": "Can view security asset inventory and basic asset metadata.",
+    "risk_level": "LOW",
+    "status": "ACTIVE"
+  },
+  {
+    "entitlement_id": "IGA-ENT-JDBC-ASSET-OWNER",
+    "application_id": "jdbc-target",
+    "native_entitlement_id": "2",
+    "entitlement_name": "Asset Owner",
+    "entitlement_description": "Can own assets and update asset ownership details.",
+    "risk_level": "MEDIUM",
+    "status": "ACTIVE"
+  },
+  {
+    "entitlement_id": "IGA-ENT-JDBC-REMEDIATION-MANAGER",
+    "application_id": "jdbc-target",
+    "native_entitlement_id": "3",
+    "entitlement_name": "Remediation Manager",
+    "entitlement_description": "Can manage remediation tasks for security asset issues.",
+    "risk_level": "HIGH",
+    "status": "ACTIVE"
+  },
+  {
+    "entitlement_id": "IGA-ENT-JDBC-COMPLIANCE-REVIEWER",
+    "application_id": "jdbc-target",
+    "native_entitlement_id": "4",
+    "entitlement_name": "Compliance Reviewer",
+    "entitlement_description": "Can review asset compliance posture and evidence.",
+    "risk_level": "MEDIUM",
+    "status": "ACTIVE"
+  },
+  {
+    "entitlement_id": "IGA-ENT-JDBC-SYSTEM-ADMINISTRATOR",
+    "application_id": "jdbc-target",
+    "native_entitlement_id": "5",
+    "entitlement_name": "System Administrator",
+    "entitlement_description": "Can administer users, roles, and security asset platform settings.",
+    "risk_level": "CRITICAL",
+    "status": "ACTIVE"
+  }
+]
