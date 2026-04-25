@@ -27,6 +27,10 @@ def get_applications() -> list[dict[str, Any]]:
     return load_json("application-catalog.json")
 
 
+def get_source_integrations() -> list[dict[str, Any]]:
+    return load_json("source-integration-model.json")
+
+
 def get_identities() -> list[dict[str, Any]]:
     return load_json("identities-normalized.json")
 
@@ -282,6 +286,7 @@ def get_routes() -> dict[str, Any]:
         "/health": {"status": "ok", "service": "iga-service"},
         "/dashboard": get_governance_dashboard(),
         "/applications": get_applications(),
+        "/source-integrations": get_source_integrations(),
         "/application-access-summary": get_application_access_summary(),
         "/identities": get_identities(),
         "/identity-access-summary": get_identity_access_summaries(),
