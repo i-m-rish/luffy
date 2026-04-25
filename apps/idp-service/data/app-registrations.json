@@ -1,0 +1,47 @@
+[
+  {
+    "app_registration_id": "APPREG-LUFFY-IGA",
+    "app_id": "iga-service",
+    "app_name": "Luffy IGA Governance",
+    "auth_protocol": "OIDC",
+    "sso_enabled": true,
+    "token_audience": "api://luffy/iga-service",
+    "status": "ACTIVE"
+  },
+  {
+    "app_registration_id": "APPREG-JDBC-TARGET",
+    "app_id": "jdbc-target",
+    "app_name": "Security Asset Operations",
+    "auth_protocol": "NONE",
+    "sso_enabled": false,
+    "token_audience": null,
+    "status": "ACTIVE"
+  },
+  {
+    "app_registration_id": "APPREG-SCIM-TARGET",
+    "app_id": "scim-target",
+    "app_name": "Endpoint Security SaaS",
+    "auth_protocol": "OIDC",
+    "sso_enabled": true,
+    "token_audience": "api://luffy/scim-target",
+    "status": "ACTIVE"
+  },
+  {
+    "app_registration_id": "APPREG-PAM-TARGET",
+    "app_id": "pam-target",
+    "app_name": "Privileged Access Management",
+    "auth_protocol": "SAML",
+    "sso_enabled": true,
+    "token_audience": null,
+    "status": "ACTIVE"
+  },
+  {
+    "app_registration_id": "APPREG-API-SECURITY-GATEWAY",
+    "app_id": "api-security-gateway",
+    "app_name": "API Security Gateway",
+    "auth_protocol": "OIDC",
+    "sso_enabled": true,
+    "token_audience": "api://luffy/api-security-gateway",
+    "status": "ACTIVE"
+  }
+]
