@@ -1,0 +1,47 @@
+[
+  {
+    "correlation_id": "IGA-CORR-JDBC-1",
+    "account_id": "IGA-ACC-JDBC-1",
+    "identity_id": "IGA-IDENTITY-1001",
+    "result": "MATCHED",
+    "match_attribute": "employee_id",
+    "confidence": "HIGH",
+    "reason": "JDBC account employee_id 1001 matched IGA identity employee_id 1001."
+  },
+  {
+    "correlation_id": "IGA-CORR-JDBC-2",
+    "account_id": "IGA-ACC-JDBC-2",
+    "identity_id": "IGA-IDENTITY-1002",
+    "result": "MATCHED",
+    "match_attribute": "employee_id",
+    "confidence": "HIGH",
+    "reason": "JDBC account employee_id 1002 matched IGA identity employee_id 1002."
+  },
+  {
+    "correlation_id": "IGA-CORR-JDBC-3",
+    "account_id": "IGA-ACC-JDBC-3",
+    "identity_id": "IGA-IDENTITY-1003",
+    "result": "MATCHED",
+    "match_attribute": "employee_id",
+    "confidence": "HIGH",
+    "reason": "JDBC account employee_id 1003 matched IGA identity employee_id 1003."
+  },
+  {
+    "correlation_id": "IGA-CORR-JDBC-4",
+    "account_id": "IGA-ACC-JDBC-4",
+    "identity_id": "IGA-IDENTITY-1004",
+    "result": "MATCHED",
+    "match_attribute": "employee_id",
+    "confidence": "HIGH",
+    "reason": "JDBC account employee_id 1004 matched IGA identity employee_id 1004."
+  },
+  {
+    "correlation_id": "IGA-CORR-JDBC-5",
+    "account_id": "IGA-ACC-JDBC-5",
+    "identity_id": null,
+    "result": "ORPHAN",
+    "match_attribute": "NONE",
+    "confidence": "NONE",
+    "reason": "JDBC account employee_id 9001 / lan_id ORPHAN01 did not match any known IGA identity."
+  }
+]
