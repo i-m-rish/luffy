@@ -1,0 +1,46 @@
+[
+  {
+    "machine_identity_id": "NHI-IGA-CONNECTOR-JDBC",
+    "name": "iga-jdbc-target-connector",
+    "type": "SERVICE_ACCOUNT",
+    "owner": "IAM Engineering",
+    "used_by_service": "iga-service",
+    "risk_level": "HIGH",
+    "status": "ACTIVE",
+    "rotation_status": "CURRENT",
+    "last_used_at": "2026-04-01T10:00:00Z"
+  },
+  {
+    "machine_identity_id": "NHI-SCIM-BEARER-CLIENT",
+    "name": "scim-target-provisioning-client",
+    "type": "OAUTH_CLIENT",
+    "owner": "IAM Engineering",
+    "used_by_service": "scim-target",
+    "risk_level": "HIGH",
+    "status": "ACTIVE",
+    "rotation_status": "DUE_SOON",
+    "last_used_at": "2026-04-02T10:00:00Z"
+  },
+  {
+    "machine_identity_id": "NHI-API-GATEWAY-SCANNER",
+    "name": "api-security-gateway-scanner",
+    "type": "SERVICE_PRINCIPAL",
+    "owner": "Security Engineering",
+    "used_by_service": "api-security-gateway",
+    "risk_level": "CRITICAL",
+    "status": "ACTIVE",
+    "rotation_status": "OVERDUE",
+    "last_used_at": "2026-04-03T10:00:00Z"
+  },
+  {
+    "machine_identity_id": "NHI-DESKTOP-AGENT-CERT",
+    "name": "desktop-agent-device-certificate",
+    "type": "CERTIFICATE_IDENTITY",
+    "owner": "Endpoint Security",
+    "used_by_service": "desktop-agent-app",
+    "risk_level": "MEDIUM",
+    "status": "ACTIVE",
+    "rotation_status": "NOT_APPLICABLE",
+    "last_used_at": null
+  }
+]
