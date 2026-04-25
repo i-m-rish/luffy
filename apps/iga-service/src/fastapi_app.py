@@ -21,12 +21,17 @@ from repository import (
 app = FastAPI(
     title="Luffy IGA Service",
     description="Read-only IGA governance API over normalized sample data.",
-    version="0.2.0",
+    version="0.2.1",
 )
 
 
 def badge(text: object, css_class: str = "") -> str:
     return f'<span class="badge {css_class}">{text}</span>'
+
+
+def table(headers: list[str], rows: list[str]) -> str:
+    header_html = "".join(f"<th>{header}</th>" for header in headers)
+    return f"<table><tr>{header_html}</tr>{''.join(rows)}</table>"
 
 
 def render_page(title: str, body: str, subtitle: str = "") -> HTMLResponse:
@@ -156,6 +161,28 @@ def identity_access(identity_id: str) -> dict[str, object]:
     return result
 
 
+def render_application_summary_table() -> str:
+    rows = []
+    for application in get_application_access_summary():
+        risk = str(application["risk_level"])
+        rows.append(
+            "<tr>"
+            f"<td>{application['application_id']}</td>"
+            f"<td>{application['application_name']}</td>"
+            f"<td>{application['integration_pattern']}</td>"
+            f"<td>{badge(risk, 'risk-' + risk)}</td>"
+            f"<td>{application['account_count']}</td>"
+            f"<td>{application['entitlement_count']}</td>"
+            f"<td>{application['assignment_count']}</td>"
+            f"<td>{application['critical_entitlement_count']}</td>"
+            "</tr>"
+        )
+    return table(
+        ["ID", "Name", "Pattern", "Risk", "Accounts", "Entitlements", "Assignments", "Critical Entitlements"],
+        rows,
+    )
+
+
 @app.get("/ui", response_class=HTMLResponse)
 def ui_dashboard() -> HTMLResponse:
     data = get_governance_dashboard()
@@ -179,22 +206,11 @@ def ui_dashboard() -> HTMLResponse:
     risk_html = "".join(f"<li>{risk}</li>" for risk in top_risks)
     body = f"""
       <section class="grid">{card_html}</section>
-      <div class="callout">
-        <strong>Governance focus</strong>
-        <ul>{risk_html}</ul>
-      </div>
+      <div class="callout"><strong>Governance focus</strong><ul>{risk_html}</ul></div>
       <h2 class="section-title">Application access summary</h2>
       {render_application_summary_table()}
     """
     return render_page("Luffy IGA Dashboard", body, "Governance visibility over identities, accounts, entitlements, risk, and correlation.")
-
-
-def render_application_summary_table() -> str:
-    rows = "".join(
-        f"<tr><td>{a['application_id']}</td><td>{a['application_name']}</td><td>{a['integration_pattern']}</td><td>{badge(a['risk_level'], f'risk-{a['risk_level']}')}</td><td>{a['account_count']}</td><td>{a['entitlement_count']}</td><td>{a['assignment_count']}</td><td>{a['critical_entitlement_count']}</td></tr>"
-        for a in get_application_access_summary()
-    )
-    return f"<table><tr><th>ID</th><th>Name</th><th>Pattern</th><th>Risk</th><th>Accounts</th><th>Entitlements</th><th>Assignments</th><th>Critical Entitlements</th></tr>{rows}</table>"
 
 
 @app.get("/ui/applications", response_class=HTMLResponse)
@@ -204,12 +220,25 @@ def ui_applications() -> HTMLResponse:
 
 @app.get("/ui/identities", response_class=HTMLResponse)
 def ui_identities() -> HTMLResponse:
-    rows = "".join(
-        f"<tr><td><a href='/ui/identity/{i['identity_id']}/access'>{i['identity_id']}</a></td><td>{i['display_name']}</td><td>{i['employee_id']}</td><td>{i['lan_id']}</td><td>{badge(i['identity_status'], f'status-{i['identity_status']}')}</td><td>{i['account_count']}</td><td>{i['assignment_count']}</td><td>{i['high_risk_assignment_count']}</td></tr>"
-        for i in get_identity_access_summaries()
+    rows = []
+    for identity in get_identity_access_summaries():
+        status = str(identity["identity_status"])
+        rows.append(
+            "<tr>"
+            f"<td><a href='/ui/identity/{identity['identity_id']}/access'>{identity['identity_id']}</a></td>"
+            f"<td>{identity['display_name']}</td>"
+            f"<td>{identity['employee_id']}</td>"
+            f"<td>{identity['lan_id']}</td>"
+            f"<td>{badge(status, 'status-' + status)}</td>"
+            f"<td>{identity['account_count']}</td>"
+            f"<td>{identity['assignment_count']}</td>"
+            f"<td>{identity['high_risk_assignment_count']}</td>"
+            "</tr>"
+        )
+    return render_page(
+        "IGA Identities",
+        table(["ID", "Name", "Employee ID", "LAN ID", "Status", "Accounts", "Assignments", "High Risk"], rows),
     )
-    table = f"<table><tr><th>ID</th><th>Name</th><th>Employee ID</th><th>LAN ID</th><th>Status</th><th>Accounts</th><th>Assignments</th><th>High Risk</th></tr>{rows}</table>"
-    return render_page("IGA Identities", table)
 
 
 @app.get("/ui/identity/{identity_id}/access", response_class=HTMLResponse)
@@ -219,68 +248,129 @@ def ui_identity_access(identity_id: str) -> HTMLResponse:
         return render_page("Identity Not Found", f"<div class='card'>No identity found for {identity_id}</div>")
 
     identity = access["identity"]
-    rows = ""
+    rows = []
     for account_view in access["accounts"]:
         account = account_view["account"]
         application = account_view["application"]
         for assignment_view in account_view["assignments"]:
             entitlement = assignment_view["entitlement"]
             assignment = assignment_view["assignment"]
-            rows += f"<tr><td>{application['application_name']}</td><td>{account['lan_id']}</td><td>{entitlement['entitlement_name']}</td><td>{badge(entitlement['risk_level'], f'risk-{entitlement['risk_level']}')}</td><td>{assignment['assigned_by']}</td><td>{assignment['assigned_at']}</td></tr>"
+            risk = str(entitlement["risk_level"])
+            rows.append(
+                "<tr>"
+                f"<td>{application['application_name']}</td>"
+                f"<td>{account['lan_id']}</td>"
+                f"<td>{entitlement['entitlement_name']}</td>"
+                f"<td>{badge(risk, 'risk-' + risk)}</td>"
+                f"<td>{assignment['assigned_by']}</td>"
+                f"<td>{assignment['assigned_at']}</td>"
+                "</tr>"
+            )
     if not rows:
-        rows = "<tr><td colspan='6'>No access found.</td></tr>"
+        rows.append("<tr><td colspan='6'>No access found.</td></tr>")
 
     body = f"""
-      <div class="card">
-        <strong>{identity['display_name']}</strong><br />
-        <span class="muted">{identity['identity_id']} · {identity['lan_id']} · {identity['identity_status']}</span>
-      </div>
+      <div class="card"><strong>{identity['display_name']}</strong><br />
+      <span class="muted">{identity['identity_id']} · {identity['lan_id']} · {identity['identity_status']}</span></div>
       <h2 class="section-title">Access</h2>
-      <table><tr><th>Application</th><th>Account</th><th>Entitlement</th><th>Risk</th><th>Assigned By</th><th>Assigned At</th></tr>{rows}</table>
+      {table(["Application", "Account", "Entitlement", "Risk", "Assigned By", "Assigned At"], rows)}
     """
     return render_page("IGA Identity Access", body)
 
 
 @app.get("/ui/accounts", response_class=HTMLResponse)
 def ui_accounts() -> HTMLResponse:
-    rows = "".join(
-        f"<tr><td>{a['account_id']}</td><td>{a['application_id']}</td><td>{a['lan_id']}</td><td>{a['email']}</td><td>{badge(a['account_status'], f'status-{a['account_status']}')}</td><td>{badge(a['correlation_status'], f'status-{a['correlation_status']}')}</td></tr>"
-        for a in get_accounts()
-    )
-    return render_page("IGA Accounts", f"<table><tr><th>ID</th><th>Application</th><th>LAN ID</th><th>Email</th><th>Status</th><th>Correlation</th></tr>{rows}</table>")
+    rows = []
+    for account in get_accounts():
+        account_status = str(account["account_status"])
+        correlation_status = str(account["correlation_status"])
+        rows.append(
+            "<tr>"
+            f"<td>{account['account_id']}</td>"
+            f"<td>{account['application_id']}</td>"
+            f"<td>{account['lan_id']}</td>"
+            f"<td>{account['email']}</td>"
+            f"<td>{badge(account_status, 'status-' + account_status)}</td>"
+            f"<td>{badge(correlation_status, 'status-' + correlation_status)}</td>"
+            "</tr>"
+        )
+    return render_page("IGA Accounts", table(["ID", "Application", "LAN ID", "Email", "Status", "Correlation"], rows))
 
 
 @app.get("/ui/entitlements", response_class=HTMLResponse)
 def ui_entitlements() -> HTMLResponse:
-    rows = "".join(
-        f"<tr><td>{e['entitlement_id']}</td><td>{e['application_id']}</td><td>{e['entitlement_name']}</td><td>{e['entitlement_description']}</td><td>{badge(e['risk_level'], f'risk-{e['risk_level']}')}</td></tr>"
-        for e in get_entitlements()
-    )
-    return render_page("IGA Entitlements", f"<table><tr><th>ID</th><th>Application</th><th>Name</th><th>Description</th><th>Risk</th></tr>{rows}</table>")
+    rows = []
+    for entitlement in get_entitlements():
+        risk = str(entitlement["risk_level"])
+        rows.append(
+            "<tr>"
+            f"<td>{entitlement['entitlement_id']}</td>"
+            f"<td>{entitlement['application_id']}</td>"
+            f"<td>{entitlement['entitlement_name']}</td>"
+            f"<td>{entitlement['entitlement_description']}</td>"
+            f"<td>{badge(risk, 'risk-' + risk)}</td>"
+            "</tr>"
+        )
+    return render_page("IGA Entitlements", table(["ID", "Application", "Name", "Description", "Risk"], rows))
 
 
 @app.get("/ui/correlation-results", response_class=HTMLResponse)
 def ui_correlation_results() -> HTMLResponse:
-    rows = "".join(
-        f"<tr><td>{c['correlation_id']}</td><td>{c['account_id']}</td><td>{c['identity_id'] or '-'}</td><td>{badge(c['result'], f'status-{c['result']}')}</td><td>{c['match_attribute']}</td><td>{c['confidence']}</td><td>{c['reason']}</td></tr>"
-        for c in get_correlation_results()
+    rows = []
+    for result in get_correlation_results():
+        status = str(result["result"])
+        rows.append(
+            "<tr>"
+            f"<td>{result['correlation_id']}</td>"
+            f"<td>{result['account_id']}</td>"
+            f"<td>{result['identity_id'] or '-'}</td>"
+            f"<td>{badge(status, 'status-' + status)}</td>"
+            f"<td>{result['match_attribute']}</td>"
+            f"<td>{result['confidence']}</td>"
+            f"<td>{result['reason']}</td>"
+            "</tr>"
+        )
+    return render_page(
+        "IGA Correlation Results",
+        table(["ID", "Account", "Identity", "Result", "Match Attribute", "Confidence", "Reason"], rows),
     )
-    return render_page("IGA Correlation Results", f"<table><tr><th>ID</th><th>Account</th><th>Identity</th><th>Result</th><th>Match Attribute</th><th>Confidence</th><th>Reason</th></tr>{rows}</table>")
 
 
 @app.get("/ui/orphan-accounts", response_class=HTMLResponse)
 def ui_orphan_accounts() -> HTMLResponse:
-    rows = "".join(
-        f"<tr><td>{item['account']['account_id']}</td><td>{item['application']['application_name']}</td><td>{item['account']['lan_id']}</td><td>{item['account']['email']}</td><td>{item['correlation_result']['reason']}</td></tr>"
-        for item in get_orphan_accounts()
-    )
-    return render_page("IGA Orphan Accounts", f"<table><tr><th>Account</th><th>Application</th><th>LAN ID</th><th>Email</th><th>Reason</th></tr>{rows}</table>")
+    rows = []
+    for item in get_orphan_accounts():
+        account = item["account"]
+        application = item["application"]
+        correlation = item["correlation_result"]
+        rows.append(
+            "<tr>"
+            f"<td>{account['account_id']}</td>"
+            f"<td>{application['application_name']}</td>"
+            f"<td>{account['lan_id']}</td>"
+            f"<td>{account['email']}</td>"
+            f"<td>{correlation['reason']}</td>"
+            "</tr>"
+        )
+    return render_page("IGA Orphan Accounts", table(["Account", "Application", "LAN ID", "Email", "Reason"], rows))
 
 
 @app.get("/ui/high-risk-access", response_class=HTMLResponse)
 def ui_high_risk_access() -> HTMLResponse:
-    rows = "".join(
-        f"<tr><td>{item['account']['lan_id']}</td><td>{item['application']['application_name']}</td><td>{item['entitlement']['entitlement_name']}</td><td>{badge(item['entitlement']['risk_level'], f'risk-{item['entitlement']['risk_level']}')}</td><td>{item['assignment']['assigned_by']}</td></tr>"
-        for item in get_high_risk_access()
-    )
-    return render_page("IGA High-Risk Access", f"<table><tr><th>LAN ID</th><th>Application</th><th>Entitlement</th><th>Risk</th><th>Assigned By</th></tr>{rows}</table>")
+    rows = []
+    for item in get_high_risk_access():
+        account = item["account"]
+        application = item["application"]
+        entitlement = item["entitlement"]
+        assignment = item["assignment"]
+        risk = str(entitlement["risk_level"])
+        rows.append(
+            "<tr>"
+            f"<td>{account['lan_id']}</td>"
+            f"<td>{application['application_name']}</td>"
+            f"<td>{entitlement['entitlement_name']}</td>"
+            f"<td>{badge(risk, 'risk-' + risk)}</td>"
+            f"<td>{assignment['assigned_by']}</td>"
+            "</tr>"
+        )
+    return render_page("IGA High-Risk Access", table(["LAN ID", "Application", "Entitlement", "Risk", "Assigned By"], rows))
