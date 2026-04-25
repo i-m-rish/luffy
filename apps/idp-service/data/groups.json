@@ -1,0 +1,42 @@
+[
+  {
+    "group_id": "GRP-ASSET-VIEWER",
+    "group_name": "Luffy Asset Viewer",
+    "group_type": "APP_ACCESS",
+    "description": "Grants login/access mapping for asset viewer functions.",
+    "risk_level": "LOW",
+    "status": "ACTIVE"
+  },
+  {
+    "group_id": "GRP-COMPLIANCE-REVIEWER",
+    "group_name": "Luffy Compliance Reviewer",
+    "group_type": "APP_ACCESS",
+    "description": "Grants access for compliance review functions.",
+    "risk_level": "MEDIUM",
+    "status": "ACTIVE"
+  },
+  {
+    "group_id": "GRP-SECURITY-ADMIN",
+    "group_name": "Luffy Security Administrator",
+    "group_type": "ADMIN",
+    "description": "High-risk security administration group.",
+    "risk_level": "CRITICAL",
+    "status": "ACTIVE"
+  },
+  {
+    "group_id": "GRP-PAM-CHECKOUT",
+    "group_name": "Luffy PAM Checkout Users",
+    "group_type": "APP_ACCESS",
+    "description": "Allows users to request privileged account checkout later.",
+    "risk_level": "HIGH",
+    "status": "ACTIVE"
+  },
+  {
+    "group_id": "GRP-API-SECURITY-ANALYST",
+    "group_name": "Luffy API Security Analysts",
+    "group_type": "SECURITY",
+    "description": "Allows access to API security findings and posture dashboards later.",
+    "risk_level": "HIGH",
+    "status": "ACTIVE"
+  }
+]
