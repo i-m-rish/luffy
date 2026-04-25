@@ -8,12 +8,12 @@ This document contains Mermaid diagrams specific to `jdbc-target`.
 
 ```mermaid
 flowchart LR
-    IGA[iga-service<br/>Future IGA Aggregation]
     JDBC[jdbc-target<br/>Security Asset Operations DB]
-    SIEM[siem-detection-service<br/>Future Findings / Alerts]
+    IGA[iga-service<br/>Normalized governance model]
+    SIEM[siem-detection-service<br/>Future findings / alerts]
 
     JDBC -->|IAM-safe views| IGA
-    IGA -->|aggregation findings later| SIEM
+    IGA -->|orphan / high-risk findings later| SIEM
 
     subgraph JDBC_DB[jdbc-target database]
         USERS[users table]
@@ -31,7 +31,6 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    RAW[Raw application tables]
     USERS[users]
     ROLES[roles]
     USERROLES[user_roles]
@@ -40,21 +39,17 @@ flowchart TD
     VIEW2[vw_iam_entitlements]
     VIEW3[vw_iam_account_entitlements]
 
-    IGA[iga-service<br/>Future JDBC aggregation]
+    IGA_ACC[iga-service<br/>accounts-normalized.json]
+    IGA_ENT[iga-service<br/>entitlements-normalized.json]
+    IGA_ASN[iga-service<br/>assignments-normalized.json]
+    IGA_CORR[iga-service<br/>correlation-results.json]
 
-    RAW --> USERS
-    RAW --> ROLES
-    RAW --> USERROLES
-
-    USERS --> VIEW1
-    ROLES --> VIEW2
+    USERS --> VIEW1 --> IGA_ACC
+    ROLES --> VIEW2 --> IGA_ENT
     USERS --> VIEW3
     ROLES --> VIEW3
-    USERROLES --> VIEW3
-
-    VIEW1 --> IGA
-    VIEW2 --> IGA
-    VIEW3 --> IGA
+    USERROLES --> VIEW3 --> IGA_ASN
+    IGA_ACC --> IGA_CORR
 ```
 
 ## 3. JDBC Target Entity Relationship Diagram
@@ -113,9 +108,13 @@ flowchart LR
     ACCOUNTS --> IGA_ACCOUNT[IGA Account]
     ENTS --> IGA_ENT[IGA Entitlement]
     ASSIGNMENTS --> IGA_ASSIGN[IGA Assignment]
+
+    IGA_ACCOUNT --> CORR[IGA Correlation Result]
+    IGA_ASSIGN --> GOV[IGA Governance View]
+    IGA_ENT --> GOV
 ```
 
-## 5. Future JDBC Aggregation Sequence
+## 5. JDBC Aggregation Sequence
 
 ```mermaid
 sequenceDiagram
@@ -144,17 +143,17 @@ flowchart TD
     EMP{employee_id match?}
     LAN{lan_id match?}
     EMAIL{email match?}
-    MATCHED[Correlation status: HIGH / MATCHED]
-    MEDIUM[Correlation status: MEDIUM]
-    LOW[Correlation status: LOW]
-    ORPHAN[Correlation status: UNMATCHED / ORPHAN]
+    MATCHED[Result: MATCHED<br/>Confidence: HIGH]
+    PARTIAL_LAN[Result: PARTIAL<br/>Confidence: MEDIUM]
+    PARTIAL_EMAIL[Result: PARTIAL<br/>Confidence: LOW]
+    ORPHAN[Result: ORPHAN<br/>Confidence: NONE]
 
     ACCOUNT --> EMP
     EMP -->|yes| MATCHED
     EMP -->|no| LAN
-    LAN -->|yes| MEDIUM
+    LAN -->|yes| PARTIAL_LAN
     LAN -->|no| EMAIL
-    EMAIL -->|yes| LOW
+    EMAIL -->|yes| PARTIAL_EMAIL
     EMAIL -->|no| ORPHAN
 ```
 
@@ -166,7 +165,7 @@ flowchart LR
     VIEW[vw_iam_entitlements.risk_level]
     ASSIGN[vw_iam_account_entitlements.risk_level]
     IGA[iga-service entitlement catalog]
-    REVIEW[Access review / certification]
+    REVIEW[Access review / certification later]
 
     ROLE --> VIEW
     ROLE --> ASSIGN
