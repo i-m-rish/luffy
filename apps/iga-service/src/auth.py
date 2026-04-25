@@ -27,6 +27,7 @@ ROLE_PERMISSIONS = {
         "VIEW_POLICY_VIOLATIONS",
         "VIEW_AUDIT",
         "ADMIN_READ",
+        "CREATE_RESOURCE_REQUEST",
     },
     "ACCESS_REVIEWER": {
         "VIEW_DASHBOARD",
@@ -47,6 +48,7 @@ ROLE_PERMISSIONS = {
         "VIEW_ACCOUNTS",
         "VIEW_ENTITLEMENTS",
         "VIEW_ACCESS_REVIEWS",
+        "CREATE_RESOURCE_REQUEST",
     },
     "READ_ONLY": {
         "VIEW_DASHBOARD",
