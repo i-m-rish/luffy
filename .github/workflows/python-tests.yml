@@ -24,12 +24,30 @@ jobs:
 
       - name: Run JDBC target tests
         run: |
-          python -m pytest apps/jdbc-target/tests -q
+          set +e
+          python -m pytest apps/jdbc-target/tests -q 2>&1 | tee jdbc-target-test.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            python scripts/classify_test_failure.py jdbc-target-test.log --suite jdbc-target
+            exit "$status"
+          fi
 
       - name: Run HRMS service tests
         run: |
-          python -m pytest apps/hrms-service/tests -q
+          set +e
+          python -m pytest apps/hrms-service/tests -q 2>&1 | tee hrms-service-test.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            python scripts/classify_test_failure.py hrms-service-test.log --suite hrms-service
+            exit "$status"
+          fi
 
       - name: Run IdP service tests
         run: |
-          python -m pytest apps/idp-service/tests -q
+          set +e
+          python -m pytest apps/idp-service/tests -q 2>&1 | tee idp-service-test.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            python scripts/classify_test_failure.py idp-service-test.log --suite idp-service
+            exit "$status"
+          fi
