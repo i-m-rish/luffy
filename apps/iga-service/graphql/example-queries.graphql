@@ -1,0 +1,43 @@
+query GetIdentityAccess($identityId: ID!) {
+  identity(identityId: $identityId) {
+    identityId
+    displayName
+    identityStatus
+    accounts {
+      accountId
+      application {
+        applicationName
+      }
+      assignments {
+        entitlement {
+          entitlementName
+          riskLevel
+        }
+      }
+    }
+  }
+}
+
+query GetOrphanAccounts {
+  accounts(correlationStatus: ORPHAN) {
+    accountId
+    nativeAccountId
+    lanId
+    email
+    accountStatus
+    application {
+      applicationName
+    }
+  }
+}
+
+query GetCriticalEntitlements {
+  entitlements(riskLevel: CRITICAL) {
+    entitlementId
+    entitlementName
+    riskLevel
+    application {
+      applicationName
+    }
+  }
+}
