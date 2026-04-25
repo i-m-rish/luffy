@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 
 import httpx
 from fastapi import FastAPI, Form, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from domain import (
     AUDIT_EVENTS,
@@ -203,8 +203,8 @@ def api_audit(request: Request) -> list[dict[str, object]]:
     return AUDIT_EVENTS
 
 
-@app.get("/", response_class=HTMLResponse)
-def home(request: Request) -> HTMLResponse | RedirectResponse:
+@app.get("/", response_class=HTMLResponse, response_model=None)
+def home(request: Request) -> Response:
     user = require_ui_user(request)
     if isinstance(user, RedirectResponse):
         return user
@@ -229,8 +229,8 @@ def home(request: Request) -> HTMLResponse | RedirectResponse:
     return page("Secure Operations Portal", body, "Enterprise app with IdP authentication, JIT provisioning, RBAC, and temporary privilege elevation.")
 
 
-@app.get("/ui/profile", response_class=HTMLResponse)
-def profile(request: Request) -> HTMLResponse | RedirectResponse:
+@app.get("/ui/profile", response_class=HTMLResponse, response_model=None)
+def profile(request: Request) -> Response:
     user = require_ui_user(request)
     if isinstance(user, RedirectResponse):
         return user
@@ -238,8 +238,8 @@ def profile(request: Request) -> HTMLResponse | RedirectResponse:
     return page("My Profile", table(["Attribute", "Value"], rows), "Local account created from IdP claims.")
 
 
-@app.get("/ui/elevation", response_class=HTMLResponse)
-def elevation(request: Request) -> HTMLResponse | RedirectResponse:
+@app.get("/ui/elevation", response_class=HTMLResponse, response_model=None)
+def elevation(request: Request) -> Response:
     user = require_ui_user(request)
     if isinstance(user, RedirectResponse):
         return user
@@ -263,8 +263,8 @@ def elevation(request: Request) -> HTMLResponse | RedirectResponse:
     return page("JIT Elevation", body, "Request time-bound privilege instead of permanent standing access.")
 
 
-@app.get("/ui/requests", response_class=HTMLResponse)
-def requests_page(request: Request) -> HTMLResponse | RedirectResponse:
+@app.get("/ui/requests", response_class=HTMLResponse, response_model=None)
+def requests_page(request: Request) -> Response:
     user = require_ui_user(request)
     if isinstance(user, RedirectResponse):
         return user
@@ -282,8 +282,8 @@ def requests_page(request: Request) -> HTMLResponse | RedirectResponse:
     return page("Elevation Requests", table(["Request", "Requester", "Target Role", "Status", "Reason"], rows or ["<tr><td colspan='5'>No requests yet.</td></tr>"]))
 
 
-@app.get("/ui/audit", response_class=HTMLResponse)
-def audit_page(request: Request) -> HTMLResponse | RedirectResponse:
+@app.get("/ui/audit", response_class=HTMLResponse, response_model=None)
+def audit_page(request: Request) -> Response:
     user = require_ui_user(request)
     if isinstance(user, RedirectResponse):
         return user
