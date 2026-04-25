@@ -16,6 +16,7 @@ from repository import (
     get_identity_access,
     get_identity_access_summaries,
     get_orphan_accounts,
+    get_source_integrations,
 )
 
 
@@ -31,6 +32,12 @@ class GovernanceService:
     def applications(self) -> list[dict[str, Any]]:
         return get_applications()
 
+    def source_integrations(self) -> list[dict[str, Any]]:
+        return get_source_integrations()
+
+    def source_integration(self, application_id: str) -> dict[str, Any] | None:
+        return find_by_id(get_source_integrations(), "application_id", application_id)
+
     def application_access_summary(self) -> list[dict[str, Any]]:
         return get_application_access_summary()
 
@@ -41,6 +48,7 @@ class GovernanceService:
         assignments = get_assignments()
         correlations = get_correlation_results()
         identities = get_identities()
+        integration = self.source_integration(application_id)
 
         application = find_by_id(applications, "application_id", application_id)
         if application is None:
@@ -74,6 +82,7 @@ class GovernanceService:
 
         return {
             "application": application,
+            "integration": integration,
             "accounts": account_views,
             "entitlements": entitlement_views,
             "assignments": source_assignments,
@@ -92,6 +101,7 @@ class GovernanceService:
             return None
 
         application = find_by_id(applications, "application_id", account["application_id"])
+        integration = self.source_integration(account["application_id"])
         correlation = find_by_id(correlations, "account_id", account_id)
         identity = None
         if correlation and correlation.get("identity_id"):
@@ -106,6 +116,7 @@ class GovernanceService:
         return {
             "account": account,
             "application": application,
+            "integration": integration,
             "correlation": correlation,
             "identity": identity,
             "assignments": assignment_views,
@@ -124,6 +135,7 @@ class GovernanceService:
             return None
 
         application = find_by_id(applications, "application_id", entitlement["application_id"])
+        integration = self.source_integration(entitlement["application_id"])
         entitlement_assignments = [assignment for assignment in assignments if assignment["entitlement_id"] == entitlement_id]
         assignment_views = []
         for assignment in entitlement_assignments:
@@ -137,6 +149,7 @@ class GovernanceService:
         return {
             "entitlement": entitlement,
             "application": application,
+            "integration": integration,
             "assignments": assignment_views,
         }
 
