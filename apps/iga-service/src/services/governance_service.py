@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+import uuid
 from typing import Any
 
 from repository import (
@@ -19,15 +21,89 @@ from repository import (
     get_source_integrations,
 )
 
+RESOURCE_REQUESTS: list[dict[str, Any]] = []
+
 
 class GovernanceService:
-    """Read-only service layer for IGA governance use cases."""
+    """Read-only service layer plus in-memory workflow simulation for IGA use cases."""
 
     def health(self) -> dict[str, str]:
         return {"status": "ok", "service": "iga-service"}
 
     def dashboard(self) -> dict[str, Any]:
         return get_governance_dashboard()
+
+    def search(self, query: str) -> list[dict[str, str]]:
+        q = query.lower().strip()
+        results: list[dict[str, str]] = []
+        if not q:
+            return results
+
+        for identity in get_identities():
+            haystack = " ".join(str(value) for value in identity.values()).lower()
+            if q in haystack:
+                results.append({
+                    "type": "Identity",
+                    "id": str(identity["identity_id"]),
+                    "name": str(identity["display_name"]),
+                    "href": f"/ui/identity/{identity['identity_id']}/access",
+                })
+
+        for application in get_applications():
+            haystack = " ".join(str(value) for value in application.values()).lower()
+            if q in haystack:
+                results.append({
+                    "type": "Source",
+                    "id": str(application["application_id"]),
+                    "name": str(application["application_name"]),
+                    "href": f"/ui/application/{application['application_id']}",
+                })
+
+        for account in get_accounts():
+            haystack = " ".join(str(value) for value in account.values()).lower()
+            if q in haystack:
+                results.append({
+                    "type": "Account",
+                    "id": str(account["account_id"]),
+                    "name": str(account["lan_id"]),
+                    "href": f"/ui/account/{account['account_id']}",
+                })
+
+        for entitlement in get_entitlements():
+            haystack = " ".join(str(value) for value in entitlement.values()).lower()
+            if q in haystack:
+                results.append({
+                    "type": "Entitlement",
+                    "id": str(entitlement["entitlement_id"]),
+                    "name": str(entitlement["entitlement_name"]),
+                    "href": f"/ui/entitlement/{entitlement['entitlement_id']}",
+                })
+
+        return results
+
+    def create_resource_request(
+        self,
+        requester: str,
+        request_type: str,
+        target_type: str,
+        target_id: str,
+        justification: str,
+    ) -> dict[str, Any]:
+        request = {
+            "request_id": str(uuid.uuid4()),
+            "requester": requester,
+            "request_type": request_type,
+            "target_type": target_type,
+            "target_id": target_id,
+            "justification": justification,
+            "status": "SUBMITTED",
+            "created_at": time.time(),
+        }
+        RESOURCE_REQUESTS.insert(0, request)
+        return request
+
+    def resource_requests(self) -> list[dict[str, Any]]:
+        return RESOURCE_REQUESTS
 
     def applications(self) -> list[dict[str, Any]]:
         return get_applications()
