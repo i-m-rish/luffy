@@ -7,13 +7,13 @@ This document contains Mermaid diagrams specific to `hrms-service`.
 ```mermaid
 flowchart LR
     HRMS[hrms-service<br/>Worker lifecycle source]
-    IDP[idp-service<br/>Digital identity later]
-    IGA[iga-service<br/>Lifecycle governance later]
+    IDP[idp-service<br/>Digital identity source]
+    IGA[iga-service<br/>Governance and correlation]
     SIEM[siem-detection-service<br/>Audit events later]
 
-    HRMS -->|worker attributes| IDP
-    HRMS -->|joiner/mover/leaver events| IGA
-    HRMS -->|audit events later| SIEM
+    HRMS -->|worker attributes later| IDP
+    HRMS -->|employment truth / lifecycle events| IGA
+    HRMS -->|worker lifecycle audit later| SIEM
 ```
 
 ## 2. HRMS Entity Relationship Diagram
@@ -71,59 +71,74 @@ erDiagram
     }
 ```
 
-## 3. Joiner Flow
+## 3. HRMS to IGA Normalization Flow
+
+```mermaid
+flowchart LR
+    WORKERS[workers.json]
+    EVENTS[lifecycle-events.json]
+    IGA_IDENTITIES[iga-service<br/>identities-normalized.json]
+    IGA_GOV[IGA governance context]
+
+    WORKERS -->|employee_id / lan_id / email / status| IGA_IDENTITIES
+    EVENTS -->|joiner / mover / leaver trigger| IGA_GOV
+    IGA_IDENTITIES --> IGA_GOV
+```
+
+## 4. Joiner Flow
 
 ```mermaid
 sequenceDiagram
     participant HRMS as hrms-service
     participant IDP as idp-service later
-    participant IGA as iga-service later
+    participant IGA as iga-service
     participant SIEM as siem-detection-service later
 
     HRMS->>HRMS: Create worker record
     HRMS->>HRMS: Create JOINER lifecycle event
     HRMS->>IDP: Send worker attributes later
     IDP->>IDP: Create digital identity later
-    IDP->>IGA: Identity aggregation later
-    IGA->>IGA: Evaluate birthright access later
+    HRMS->>IGA: Provide worker context
+    IDP->>IGA: Provide digital identity context later
+    IGA->>IGA: Normalize identity and evaluate birthright access later
     HRMS->>SIEM: Send worker lifecycle audit event later
 ```
 
-## 4. Mover Flow
+## 5. Mover Flow
 
 ```mermaid
 sequenceDiagram
     participant HRMS as hrms-service
-    participant IGA as iga-service later
+    participant IGA as iga-service
     participant SIEM as siem-detection-service later
 
     HRMS->>HRMS: Update department / position / manager
     HRMS->>HRMS: Create MOVER lifecycle event
-    HRMS->>IGA: Send lifecycle event later
+    HRMS->>IGA: Provide updated lifecycle context
     IGA->>IGA: Review old access later
     IGA->>IGA: Evaluate new access later
     HRMS->>SIEM: Send mover audit event later
 ```
 
-## 5. Leaver Flow
+## 6. Leaver Flow
 
 ```mermaid
 sequenceDiagram
     participant HRMS as hrms-service
     participant IDP as idp-service later
-    participant IGA as iga-service later
+    participant IGA as iga-service
     participant SIEM as siem-detection-service later
 
     HRMS->>HRMS: Set employment_status = TERMINATED
     HRMS->>HRMS: Create LEAVER lifecycle event
     HRMS->>IDP: Send termination status later
     IDP->>IDP: Disable digital identity later
-    HRMS->>IGA: Send leaver event later
-    IGA->>IGA: Trigger deprovisioning later
+    HRMS->>IGA: Provide leaver status
+    IGA->>IGA: Flag active accounts for deprovisioning review later
     HRMS->>SIEM: Send leaver audit event later
 ```
 
-## 6. Downstream Governance Mapping
+## 7. Downstream Governance Mapping
 
 ```mermaid
 flowchart LR
@@ -133,10 +148,10 @@ flowchart LR
     IGA[iga-service]
 
     WORKER -->|identity attributes| IDP
-    WORKER -->|manager/department context| IGA
-    EVENT -->|joiner/mover/leaver trigger| IGA
+    WORKER -->|manager / department / employment status| IGA
+    EVENT -->|joiner / mover / leaver trigger| IGA
 
-    IGA --> BIRTHRIGHT[birthright access]
-    IGA --> REVIEW[mover access review]
-    IGA --> DEPROV[leaver deprovisioning]
+    IGA --> BIRTHRIGHT[birthright access later]
+    IGA --> REVIEW[mover access review later]
+    IGA --> DEPROV[leaver deprovisioning review later]
 ```
