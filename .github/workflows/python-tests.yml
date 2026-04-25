@@ -51,3 +51,13 @@ jobs:
             python scripts/classify_test_failure.py idp-service-test.log --suite idp-service
             exit "$status"
           fi
+
+      - name: Run IGA service tests
+        run: |
+          set +e
+          python -m pytest apps/iga-service/tests -q 2>&1 | tee iga-service-test.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            python scripts/classify_test_failure.py iga-service-test.log --suite iga-service
+            exit "$status"
+          fi
