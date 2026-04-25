@@ -63,3 +63,28 @@ def test_fastapi_high_risk_access_endpoint() -> None:
     names = {item["entitlement"]["entitlement_name"] for item in payload}
     assert "Remediation Manager" in names
     assert "System Administrator" in names
+
+
+def test_iga_ui_dashboard_renders_html() -> None:
+    response = client.get("/ui")
+
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "Luffy IGA Dashboard" in response.text
+    assert "Orphan Accounts" in response.text
+
+
+def test_iga_ui_accounts_renders_html() -> None:
+    response = client.get("/ui/accounts")
+
+    assert response.status_code == 200
+    assert "ORPHAN01" in response.text
+    assert "MATCHED" in response.text
+
+
+def test_iga_ui_high_risk_access_renders_html() -> None:
+    response = client.get("/ui/high-risk-access")
+
+    assert response.status_code == 200
+    assert "System Administrator" in response.text
+    assert "Remediation Manager" in response.text
