@@ -43,5 +43,32 @@
     "match_attribute": "NONE",
     "confidence": "NONE",
     "reason": "JDBC account employee_id 9001 / lan_id ORPHAN01 did not match any known IGA identity."
+  },
+  {
+    "correlation_id": "IGA-CORR-ZSP-1",
+    "account_id": "IGA-ACC-ZSP-ADMIN",
+    "identity_id": "IGA-IDENTITY-1001",
+    "result": "MATCHED",
+    "match_attribute": "employee_id",
+    "confidence": "HIGH",
+    "reason": "ZSP JIT account employee_id 1001 matched IGA identity employee_id 1001."
+  },
+  {
+    "correlation_id": "IGA-CORR-ZSP-2",
+    "account_id": "IGA-ACC-ZSP-REVIEWER",
+    "identity_id": "IGA-IDENTITY-1002",
+    "result": "MATCHED",
+    "match_attribute": "employee_id",
+    "confidence": "HIGH",
+    "reason": "ZSP JIT account employee_id 1002 matched IGA identity employee_id 1002."
+  },
+  {
+    "correlation_id": "IGA-CORR-ZSP-3",
+    "account_id": "IGA-ACC-ZSP-READER",
+    "identity_id": "IGA-IDENTITY-1003",
+    "result": "MATCHED",
+    "match_attribute": "employee_id",
+    "confidence": "HIGH",
+    "reason": "ZSP JIT account employee_id 1003 matched IGA identity employee_id 1003."
   }
 ]
