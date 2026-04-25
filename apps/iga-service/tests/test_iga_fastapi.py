@@ -65,8 +65,10 @@ def test_fastapi_applications_endpoint_for_admin() -> None:
 
     assert response.status_code == 200
     applications = response.json()
-    assert len(applications) == 8
-    assert any(application["application_id"] == "jdbc-target" for application in applications)
+    assert len(applications) == 10
+    application_ids = {application["application_id"] for application in applications}
+    assert "jdbc-target" in application_ids
+    assert "zsp-jit-app" in application_ids
 
 
 def test_fastapi_identity_access_endpoint_for_admin() -> None:
@@ -76,7 +78,9 @@ def test_fastapi_identity_access_endpoint_for_admin() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["identity"]["employee_id"] == "1001"
-    assert payload["accounts"][0]["account"]["lan_id"] == "RSINGH01"
+    account_application_ids = {account["account"]["application_id"] for account in payload["accounts"]}
+    assert "jdbc-target" in account_application_ids
+    assert "zsp-jit-app" in account_application_ids
 
 
 def test_fastapi_unknown_identity_returns_404_for_admin() -> None:
@@ -106,6 +110,8 @@ def test_fastapi_high_risk_access_endpoint_for_admin() -> None:
     names = {item["entitlement"]["entitlement_name"] for item in payload}
     assert "Remediation Manager" in names
     assert "System Administrator" in names
+    assert "ZSP Administrator" in names
+    assert "Temporary Session Administrator" in names
 
 
 def test_read_only_user_cannot_access_high_risk_api() -> None:
@@ -133,6 +139,7 @@ def test_iga_ui_accounts_renders_html_for_admin() -> None:
     assert response.status_code == 200
     assert "ORPHAN01" in response.text
     assert "MATCHED" in response.text
+    assert "zsp-jit-app" in response.text
 
 
 def test_iga_ui_high_risk_access_renders_html_for_admin() -> None:
@@ -142,6 +149,7 @@ def test_iga_ui_high_risk_access_renders_html_for_admin() -> None:
     assert response.status_code == 200
     assert "System Administrator" in response.text
     assert "Remediation Manager" in response.text
+    assert "ZSP Administrator" in response.text
 
 
 def test_read_only_user_is_redirected_from_high_risk_ui() -> None:
