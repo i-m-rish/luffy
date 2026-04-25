@@ -3,7 +3,7 @@ from __future__ import annotations
 from urllib.parse import urlencode
 
 from fastapi import APIRouter, Form, HTTPException, Query
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from auth import (
     ACCESS_TOKENS,
@@ -143,14 +143,14 @@ def authorize_form(
     return HTMLResponse(login_page(client_id, redirect_uri, state))
 
 
-@router.post("/oauth/authorize")
+@router.post("/oauth/authorize", response_model=None)
 def authorize_submit(
     client_id: str = Form(...),
     redirect_uri: str = Form(...),
     state: str = Form(default=""),
     username: str = Form(...),
     password: str = Form(...),
-) -> HTMLResponse | RedirectResponse:
+) -> Response:
     if not validate_effective_client(client_id, redirect_uri):
         raise HTTPException(status_code=400, detail="Invalid client_id or redirect_uri")
 
