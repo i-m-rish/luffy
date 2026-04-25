@@ -1,0 +1,88 @@
+[
+  {
+    "event_id": "EVT-2026-0001",
+    "employee_id": "1001",
+    "event_type": "JOINER",
+    "effective_date": "2026-01-01",
+    "old_value": null,
+    "new_value": {
+      "employment_status": "ACTIVE",
+      "department_id": "DEPT-CYBER-OPS",
+      "position_id": "POS-SEC-ANALYST"
+    },
+    "status": "PROCESSED",
+    "created_at": "2026-01-01T09:00:00Z"
+  },
+  {
+    "event_id": "EVT-2026-0002",
+    "employee_id": "1002",
+    "event_type": "JOINER",
+    "effective_date": "2026-01-02",
+    "old_value": null,
+    "new_value": {
+      "employment_status": "ACTIVE",
+      "department_id": "DEPT-RISK",
+      "position_id": "POS-RISK-ANALYST"
+    },
+    "status": "PROCESSED",
+    "created_at": "2026-01-02T09:00:00Z"
+  },
+  {
+    "event_id": "EVT-2026-0003",
+    "employee_id": "1005",
+    "event_type": "JOINER",
+    "effective_date": "2026-02-01",
+    "old_value": null,
+    "new_value": {
+      "employment_status": "ACTIVE",
+      "worker_type": "CONTRACTOR",
+      "department_id": "DEPT-CYBER-OPS",
+      "position_id": "POS-CONTRACTOR-SUPPORT"
+    },
+    "status": "PROCESSED",
+    "created_at": "2026-02-01T09:00:00Z"
+  },
+  {
+    "event_id": "EVT-2026-0004",
+    "employee_id": "1003",
+    "event_type": "DEPARTMENT_CHANGE",
+    "effective_date": "2026-03-01",
+    "old_value": {
+      "department_id": "DEPT-CYBER-OPS"
+    },
+    "new_value": {
+      "department_id": "DEPT-ASSET-MGMT"
+    },
+    "status": "PROCESSED",
+    "created_at": "2026-03-01T09:00:00Z"
+  },
+  {
+    "event_id": "EVT-2026-0005",
+    "employee_id": "1006",
+    "event_type": "LEAVER",
+    "effective_date": "2026-03-31",
+    "old_value": {
+      "employment_status": "ACTIVE"
+    },
+    "new_value": {
+      "employment_status": "TERMINATED",
+      "termination_date": "2026-03-31"
+    },
+    "status": "PROCESSED",
+    "created_at": "2026-03-31T18:00:00Z"
+  },
+  {
+    "event_id": "EVT-2026-0006",
+    "employee_id": "1004",
+    "event_type": "MANAGER_CHANGE",
+    "effective_date": "2026-04-01",
+    "old_value": {
+      "manager_employee_id": "2003"
+    },
+    "new_value": {
+      "manager_employee_id": "2004"
+    },
+    "status": "PROCESSED",
+    "created_at": "2026-04-01T09:00:00Z"
+  }
+]
