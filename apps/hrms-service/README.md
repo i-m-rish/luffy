@@ -95,11 +95,54 @@ apps/hrms-service/
 │   ├── audit-events.md
 │   └── ui-decision.md
 ├── scripts/
+│   └── validate_data.py
 └── tests/
+    └── test_hrms_data.py
+```
+
+## Validate sample data
+
+From the repository root:
+
+```bash
+cd apps/hrms-service
+python scripts/validate_data.py
+```
+
+The validator checks:
+
+```text
+required fields
+unique worker IDs, employee IDs, and emails
+valid worker status values
+valid department and position references
+valid lifecycle event types
+terminated workers have termination dates
+lifecycle events reference known workers
+```
+
+## Run tests
+
+From the repository root:
+
+```bash
+python -m pytest apps/hrms-service/tests
+```
+
+The tests verify:
+
+```text
+sample data validation passes
+expected counts are present
+required lifecycle event types exist
+terminated worker has a leaver event
+contractor worker exists for worker-type governance
+workers reference valid departments and positions
+critical position exists for high-risk access governance
 ```
 
 ## Milestone 1 scope
 
-Milestone 1 focuses on design and sample data.
+Milestone 1 focuses on design, sample data, and validation.
 
 No real HR data, no real employee data, and no production integration.
