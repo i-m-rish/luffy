@@ -22,6 +22,14 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pytest
 
-      - name: Run tests
+      - name: Run JDBC target tests
         run: |
-          python -m pytest
+          python -m pytest apps/jdbc-target/tests -q
+
+      - name: Run HRMS service tests
+        run: |
+          python -m pytest apps/hrms-service/tests -q
+
+      - name: Run IdP service tests
+        run: |
+          python -m pytest apps/idp-service/tests -q
