@@ -1,0 +1,26 @@
+[project]
+name = "luffy"
+version = "0.1.0"
+description = "Cybersecurity IAM learning lab for IGA, IdP, PAM, API security, SIEM, and machine identity patterns."
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "apps",
+    "tests"
+]
+python_files = [
+    "test_*.py"
+]
+python_functions = [
+    "test_*"
+]
+addopts = "-q"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = []
