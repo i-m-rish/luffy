@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import hashlib
-import hmac
 import uuid
 from dataclasses import dataclass
 from typing import Any
@@ -10,6 +8,10 @@ from fastapi import HTTPException, Request
 from fastapi.responses import RedirectResponse
 
 SESSION_COOKIE_NAME = "luffy_iga_session"
+IDP_STATE_COOKIE_NAME = "luffy_iga_auth_state"
+IDP_BASE_URL = "http://127.0.0.1:8002"
+IGA_CLIENT_ID = "luffy-iga"
+IGA_REDIRECT_URI = "http://127.0.0.1:8001/auth/callback"
 
 ROLE_PERMISSIONS = {
     "IGA_ADMIN": {
@@ -21,6 +23,8 @@ ROLE_PERMISSIONS = {
         "VIEW_CORRELATION",
         "VIEW_ORPHANS",
         "VIEW_HIGH_RISK",
+        "VIEW_ACCESS_REVIEWS",
+        "VIEW_POLICY_VIOLATIONS",
         "VIEW_AUDIT",
         "ADMIN_READ",
     },
@@ -33,6 +37,8 @@ ROLE_PERMISSIONS = {
         "VIEW_CORRELATION",
         "VIEW_ORPHANS",
         "VIEW_HIGH_RISK",
+        "VIEW_ACCESS_REVIEWS",
+        "VIEW_POLICY_VIOLATIONS",
     },
     "APP_OWNER": {
         "VIEW_DASHBOARD",
@@ -40,6 +46,7 @@ ROLE_PERMISSIONS = {
         "VIEW_IDENTITIES",
         "VIEW_ACCOUNTS",
         "VIEW_ENTITLEMENTS",
+        "VIEW_ACCESS_REVIEWS",
     },
     "READ_ONLY": {
         "VIEW_DASHBOARD",
@@ -49,75 +56,49 @@ ROLE_PERMISSIONS = {
 }
 
 
-def hash_password(password: str) -> str:
-    return hashlib.sha256(password.encode("utf-8")).hexdigest()
-
-
 @dataclass(frozen=True)
-class DemoUser:
+class AuthenticatedUser:
     username: str
     display_name: str
+    email: str
     role: str
-    password_hash: str
+    source: str = "idp-service"
 
     @property
     def permissions(self) -> set[str]:
-        return ROLE_PERMISSIONS[self.role]
+        return ROLE_PERMISSIONS.get(self.role, set())
 
     def public_profile(self) -> dict[str, Any]:
         return {
             "username": self.username,
             "display_name": self.display_name,
+            "email": self.email,
             "role": self.role,
+            "source": self.source,
             "permissions": sorted(self.permissions),
         }
 
 
-DEMO_USERS = {
-    "admin": DemoUser(
-        username="admin",
-        display_name="IGA Administrator",
-        role="IGA_ADMIN",
-        password_hash=hash_password("admin123"),
-    ),
-    "reviewer": DemoUser(
-        username="reviewer",
-        display_name="Access Reviewer",
-        role="ACCESS_REVIEWER",
-        password_hash=hash_password("reviewer123"),
-    ),
-    "owner": DemoUser(
-        username="owner",
-        display_name="Application Owner",
-        role="APP_OWNER",
-        password_hash=hash_password("owner123"),
-    ),
-    "reader": DemoUser(
-        username="reader",
-        display_name="Read Only User",
-        role="READ_ONLY",
-        password_hash=hash_password("reader123"),
-    ),
-}
-
-ACTIVE_SESSIONS: dict[str, str] = {}
+ACTIVE_SESSIONS: dict[str, AuthenticatedUser] = {}
 
 
-def authenticate_user(username: str, password: str) -> DemoUser | None:
-    user = DEMO_USERS.get(username)
-    if user is None:
-        return None
-
-    candidate_hash = hash_password(password)
-    if not hmac.compare_digest(candidate_hash, user.password_hash):
-        return None
-
-    return user
+def create_auth_state() -> str:
+    return str(uuid.uuid4())
 
 
-def create_session(username: str) -> str:
+def create_session_from_claims(claims: dict[str, Any]) -> str:
+    role = str(claims.get("role", "READ_ONLY"))
+    if role not in ROLE_PERMISSIONS:
+        role = "READ_ONLY"
+
+    user = AuthenticatedUser(
+        username=str(claims.get("preferred_username") or claims.get("sub") or "unknown"),
+        display_name=str(claims.get("name") or claims.get("preferred_username") or "Unknown User"),
+        email=str(claims.get("email") or "unknown@example.com"),
+        role=role,
+    )
     session_id = str(uuid.uuid4())
-    ACTIVE_SESSIONS[session_id] = username
+    ACTIVE_SESSIONS[session_id] = user
     return session_id
 
 
@@ -126,26 +107,21 @@ def destroy_session(session_id: str | None) -> None:
         ACTIVE_SESSIONS.pop(session_id, None)
 
 
-def get_current_user(request: Request) -> DemoUser | None:
+def get_current_user(request: Request) -> AuthenticatedUser | None:
     session_id = request.cookies.get(SESSION_COOKIE_NAME)
     if not session_id:
         return None
-
-    username = ACTIVE_SESSIONS.get(session_id)
-    if not username:
-        return None
-
-    return DEMO_USERS.get(username)
+    return ACTIVE_SESSIONS.get(session_id)
 
 
-def require_user(request: Request) -> DemoUser:
+def require_user(request: Request) -> AuthenticatedUser:
     user = get_current_user(request)
     if user is None:
         raise HTTPException(status_code=401, detail="Authentication required")
     return user
 
 
-def require_permission(request: Request, permission: str) -> DemoUser:
+def require_permission(request: Request, permission: str) -> AuthenticatedUser:
     user = require_user(request)
     if permission not in user.permissions:
         raise HTTPException(
@@ -159,7 +135,7 @@ def require_permission(request: Request, permission: str) -> DemoUser:
     return user
 
 
-def require_ui_permission(request: Request, permission: str) -> DemoUser | RedirectResponse:
+def require_ui_permission(request: Request, permission: str) -> AuthenticatedUser | RedirectResponse:
     user = get_current_user(request)
     if user is None:
         return RedirectResponse(url="/login", status_code=303)
