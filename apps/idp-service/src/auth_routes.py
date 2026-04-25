@@ -14,10 +14,26 @@ from auth import (
     create_authorization_code,
     exchange_code_for_token,
     get_userinfo,
-    validate_client,
 )
 
 router = APIRouter(tags=["IdP Authentication"])
+
+EXTRA_CLIENTS = {
+    "luffy-zsp": {
+        "client_name": "Secure Operations Portal",
+        "redirect_uri": "http://127.0.0.1:8003/auth/callback",
+        "allowed_roles": ["IGA_ADMIN", "ACCESS_REVIEWER", "APP_OWNER", "READ_ONLY"],
+    }
+}
+
+
+def effective_clients() -> dict[str, dict[str, object]]:
+    return {**REGISTERED_CLIENTS, **EXTRA_CLIENTS}
+
+
+def validate_effective_client(client_id: str, redirect_uri: str) -> bool:
+    client = effective_clients().get(client_id)
+    return client is not None and client["redirect_uri"] == redirect_uri
 
 
 def login_page(client_id: str, redirect_uri: str, state: str, error: str = "") -> str:
@@ -51,7 +67,7 @@ def login_page(client_id: str, redirect_uri: str, state: str, error: str = "") -
         <div class="shell">
           <section class="card">
             <h1>Luffy IdP Login</h1>
-            <p class="muted">Authenticate once with IdP. IGA receives local demo claims and applies RBAC.</p>
+            <p class="muted">Authenticate once with IdP. The target app receives local demo claims and applies RBAC.</p>
             {error_html}
             <form method="post" action="/oauth/authorize">
               <input type="hidden" name="client_id" value="{client_id}" />
@@ -66,7 +82,7 @@ def login_page(client_id: str, redirect_uri: str, state: str, error: str = "") -
           </section>
           <section class="card">
             <h2>Demo IdP users</h2>
-            <p class="muted">Local demo only. IGA uses the returned role claim for RBAC.</p>
+            <p class="muted">Local demo only. Apps use the returned role claim for RBAC.</p>
             <table><tr><th>User</th><th>Role Claim</th><th>Password</th></tr>{demo_rows}</table>
           </section>
         </div>
@@ -93,7 +109,7 @@ def openid_configuration() -> dict[str, object]:
 def oauth_status() -> dict[str, object]:
     return {
         "issuer": "http://127.0.0.1:8002",
-        "registered_client_count": len(REGISTERED_CLIENTS),
+        "registered_client_count": len(effective_clients()),
         "demo_user_count": len(IDP_USERS),
         "active_authorization_code_count": len(AUTHORIZATION_CODES),
         "active_access_token_count": len(ACCESS_TOKENS),
@@ -112,7 +128,7 @@ def oauth_clients() -> list[dict[str, object]]:
             "redirect_uri": client["redirect_uri"],
             "allowed_roles": client["allowed_roles"],
         }
-        for client_id, client in REGISTERED_CLIENTS.items()
+        for client_id, client in effective_clients().items()
     ]
 
 
@@ -122,7 +138,7 @@ def authorize_form(
     redirect_uri: str = Query(...),
     state: str = Query(default=""),
 ) -> HTMLResponse:
-    if not validate_client(client_id, redirect_uri):
+    if not validate_effective_client(client_id, redirect_uri):
         raise HTTPException(status_code=400, detail="Invalid client_id or redirect_uri")
     return HTMLResponse(login_page(client_id, redirect_uri, state))
 
@@ -135,7 +151,7 @@ def authorize_submit(
     username: str = Form(...),
     password: str = Form(...),
 ) -> HTMLResponse | RedirectResponse:
-    if not validate_client(client_id, redirect_uri):
+    if not validate_effective_client(client_id, redirect_uri):
         raise HTTPException(status_code=400, detail="Invalid client_id or redirect_uri")
 
     user = authenticate_user(username, password)
