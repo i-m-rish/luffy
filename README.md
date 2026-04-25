@@ -1,22 +1,124 @@
 # Luffy
 
-Luffy is a cybersecurity IAM learning lab for building smaller versions of real identity, governance, privileged access, API security, and detection platforms.
+Luffy is a cybersecurity IAM learning lab for building smaller, runnable versions of real identity, governance, application onboarding, privileged access, and detection patterns.
 
-The project is designed to teach SailPoint-style IGA concepts, IdP concepts, HRMS-driven identity lifecycle, multiple application onboarding patterns, API security posture, machine identity governance, and future AI-agent assisted reviews.
-
-## Core principle
-
-Use the right integration pattern for each service.
+The current focus is an applied IAM flow:
 
 ```text
-GraphQL where relationships are complex.
-REST/SCIM/SQL where those patterns are realistic.
-Agents later, after clean data and APIs exist.
+HRMS lifecycle data
+→ IdP authentication and role claims
+→ IGA/SailPoint-style governance visibility
+→ target applications with realistic connector patterns
+```
+
+## Current runnable apps
+
+| App | Acts like | Port | Current status | Purpose |
+|---|---|---:|---|---|
+| `idp-service` | Entra ID / Okta-style IdP | 8002 | Runnable | OIDC-like login, auth code flow, user claims, groups, app registrations, OAuth clients |
+| `iga-service` | SailPoint-style IGA | 8001 | Runnable | Identity warehouse, sources, accounts, entitlements, correlation, access reviews, policy violations, RBAC |
+| `zsp-jit-app` | Enterprise SaaS target app | 8003 | Runnable | OIDC login through IdP, JIT user provisioning, zero standing privilege, temporary elevation, audit events |
+| `hrms-service` | HRMS source | data/tests | Foundation | Joiner, mover, leaver, department, position and lifecycle sample data |
+| `jdbc-target` | JDBC/SQL legacy app | data/tests | Foundation | SQL users, roles, mappings, and IAM aggregation views |
+
+## Planned apps
+
+| Planned app | Pattern | Purpose |
+|---|---|---|
+| `scim-target` | SCIM 2.0 | SaaS provisioning pattern with `/Users` and `/Groups` |
+| `webservices-target` | REST | Web services connector pattern |
+| `pam-target` | PAM API | Safes, privileged accounts, checkout, sessions, audit |
+| `api-security-gateway` | REST | API posture checks, monitor/enforce, findings |
+| `siem-detection-service` | Event API | Events, alerts, investigations, detections |
+| `desktop-agent-app` | Desktop/client app | Endpoint posture, heartbeat, machine identity |
+
+## Local run
+
+### macOS
+
+```bash
+chmod +x scripts/run-local-mac.sh
+./scripts/run-local-mac.sh
+```
+
+### Linux / Git Bash
+
+```bash
+chmod +x scripts/run-local.sh
+./scripts/run-local.sh
+```
+
+### Windows PowerShell
+
+```powershell
+.\scripts\run-local.ps1
+```
+
+The local runners start:
+
+```text
+IGA UI:       http://127.0.0.1:8001/ui
+IGA API docs: http://127.0.0.1:8001/docs
+IdP UI:       http://127.0.0.1:8002/ui
+IdP API docs: http://127.0.0.1:8002/docs
+ZSP App UI:   http://127.0.0.1:8003
+ZSP API docs: http://127.0.0.1:8003/docs
+```
+
+## Demo login users
+
+The IdP authenticates users and returns role claims to IGA and ZSP.
+
+| Username | Password | IdP role claim | IGA behavior | ZSP app role |
+|---|---|---|---|---|
+| `admin` | `admin123` | `IGA_ADMIN` | Full governance access | `ZSP_ADMIN` |
+| `reviewer` | `reviewer123` | `ACCESS_REVIEWER` | Review/risk access | `ZSP_APPROVER` |
+| `owner` | `owner123` | `APP_OWNER` | App/account/entitlement visibility | `ZSP_OPERATOR` |
+| `reader` | `reader123` | `READ_ONLY` | Limited read access | `ZSP_VIEWER` |
+
+## Implemented auth flow
+
+```text
+Browser
+→ IGA or ZSP /login
+→ IdP /oauth/authorize
+→ user signs in
+→ IdP returns authorization code
+→ relying app exchanges code at /oauth/token
+→ relying app creates local session from IdP claims
+→ relying app enforces RBAC
+```
+
+This is a local OAuth/OIDC-like learning flow. It is intentionally not production authentication.
+
+## IGA governance model
+
+IGA now governs:
+
+```text
+Identities
+Sources
+Accounts
+Entitlements
+Assignments
+Correlation results
+Orphan accounts
+High-risk access
+Access review placeholders
+Policy violation placeholders
+```
+
+IGA includes ZSP as a governed source so the lab demonstrates:
+
+```text
+IdP authenticates user
+ZSP provisions app-local user JIT
+IGA sees ZSP accounts, entitlements, assignments, and temporary high-risk access
 ```
 
 ## Security and responsible AI baseline
 
-Before implementation, every service must follow the project guardrails:
+Every service should follow these project guardrails:
 
 ```text
 Secure by default
@@ -34,140 +136,41 @@ See:
 - [Secure by Design and Responsible AI Guardrails](docs/secure-by-design-and-responsible-ai.md)
 - [API and Authentication Standards](docs/api-authentication-standards.md)
 
-## Services
+## Integration pattern principle
 
-| Service | Acts like | Main API/data style | Purpose |
-|---|---|---|---|
-| `hrms-service` | Workday / SAP SuccessFactors / Oracle HCM | REST + database later | Employee lifecycle source: joiner, mover, leaver |
-| `idp-service` | Entra ID / Okta | GraphQL + REST login | Digital identities, groups, app registrations, machine identities |
-| `iga-service` | SailPoint-like IGA | GraphQL | Aggregation, correlation, request, approval, provisioning, certification |
-| `jdbc-target` | DB/JDBC legacy app | SQL database | Security asset app with users, roles, mappings, IAM views |
-| `webservices-target` | Custom cloud/security risk app | REST + cloud DB later | REST/Web Services connector pattern |
-| `scim-target` | SaaS endpoint security app | SCIM 2.0 | SaaS provisioning pattern using users/groups |
-| `pam-target` | CyberArk-like PAM | REST + audit data | Safes, privileged accounts, checkout, sessions, audit |
-| `api-security-gateway` | API security posture gateway | REST | SSL/TLS, auth, headers, CORS, posture scan, monitor/enforce |
-| `siem-detection-service` | SIEM/detection platform | Event ingestion API | Events, alerts, detections, investigations |
-| `desktop-agent-app` | Endpoint desktop agent | Desktop/client app later | Device posture, heartbeat, machine identity, local events |
-
-## Target structure
+Use the right integration pattern for each service:
 
 ```text
-luffy/
-├── apps/
-│   ├── hrms-service/
-│   ├── idp-service/
-│   ├── iga-service/
-│   ├── jdbc-target/
-│   ├── webservices-target/
-│   ├── scim-target/
-│   ├── pam-target/
-│   ├── api-security-gateway/
-│   ├── siem-detection-service/
-│   └── desktop-agent-app/
-├── docs/
-├── scripts/
-├── tests/
-└── README.md
+IdP / IGA concepts      → highly connected IAM graph concepts
+JDBC target             → SQL/JDBC
+ZSP SaaS app            → OIDC + JIT + app-local RBAC
+SCIM target later       → SCIM 2.0
+REST targets later      → REST/Web Services APIs
+PAM target later        → PAM-style REST APIs and audit
+Agents later            → after clean data and APIs exist
 ```
 
-## GraphQL decision
+## Test command
 
-Use GraphQL in:
-
-```text
-idp-service
-iga-service
+```bash
+python -m pytest apps/jdbc-target/tests -q
+python -m pytest apps/hrms-service/tests -q
+python -m pytest apps/idp-service/tests -q
+python -m pytest apps/iga-service/tests -q
+python -m pytest apps/zsp-jit-app/tests -q
 ```
 
-Reason:
+## Current build direction
+
+Next recommended build order:
 
 ```text
-IdP and IGA data is highly connected:
-Identity -> groups -> apps -> accounts -> entitlements -> approvals -> risks.
-```
-
-Do not force GraphQL into every target app. Target apps should keep their realistic integration style:
-
-```text
-jdbc-target            -> SQL/JDBC
-webservices-target     -> REST
-scim-target            -> SCIM
-pam-target             -> REST/PAM-style APIs
-api-security-gateway   -> REST
-siem-detection         -> event API
-```
-
-## Build order
-
-### Milestone 1 - IAM foundation
-
-```text
-1. jdbc-target
-2. hrms-service
-3. idp-service with basic GraphQL model
-4. iga-service with basic GraphQL model
-```
-
-Goal:
-
-```text
-HRMS worker -> IdP identity -> IGA normalized identity/account/entitlement -> JDBC correlation report
-```
-
-### Milestone 2 - Additional connector patterns
-
-```text
-5. webservices-target
-6. scim-target as SaaS app
-7. pam-target
-```
-
-Goal:
-
-```text
-Show REST, SCIM, and PAM onboarding/governance patterns.
-```
-
-### Milestone 3 - Security control and detection
-
-```text
-8. api-security-gateway
-9. siem-detection-service
-```
-
-Goal:
-
-```text
-API posture checks, monitor/enforce mode, findings, alerts, detection rules.
-```
-
-### Milestone 4 - Endpoint and machine identity
-
-```text
-10. desktop-agent-app
-11. machine identity governance inside idp-service and iga-service
-```
-
-Goal:
-
-```text
-Device identity, certificates, service accounts, OAuth clients, token/secret ownership and rotation status.
-```
-
-### Milestone 5 - AI agents
-
-```text
-12. IAM review agent
-13. app onboarding agent
-14. API security agent
-15. certification recommendation agent
-16. machine identity risk agent
-```
-
-Goal:
-
-```text
-Agents explain risks, suggest reviews, summarize onboarding gaps, and recommend remediation.
+1. Stabilize docs/runners/tests for current apps
+2. Refactor ZSP app into the same layered style as IGA
+3. Build SCIM target
+4. Add provisioning/request workflow simulation between IGA and target apps
+5. Add PAM and API security patterns
+6. Add AI agents only after the data and APIs are reliable
 ```
 
 ## Documentation
