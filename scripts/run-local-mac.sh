@@ -26,11 +26,13 @@ echo "IGA UI:       http://127.0.0.1:8001/ui"
 echo "IGA API docs: http://127.0.0.1:8001/docs"
 echo "IdP UI:       http://127.0.0.1:8002/ui"
 echo "IdP API docs: http://127.0.0.1:8002/docs"
-echo "Press Ctrl+C to stop both apps."
+echo "ZSP App UI:   http://127.0.0.1:8003"
+echo "ZSP API docs: http://127.0.0.1:8003/docs"
+echo "Press Ctrl+C to stop all apps."
 
 cleanup() {
   echo "Stopping local apps..."
-  kill "${IGA_PID:-0}" "${IDP_PID:-0}" 2>/dev/null || true
+  kill "${IGA_PID:-0}" "${IDP_PID:-0}" "${ZSP_PID:-0}" 2>/dev/null || true
 }
 trap cleanup EXIT INT TERM
 
@@ -45,5 +47,11 @@ IGA_PID=$!
   python -m uvicorn fastapi_app:app --reload --host 127.0.0.1 --port 8002
 ) &
 IDP_PID=$!
+
+(
+  cd "$ROOT_DIR/apps/zsp-jit-app/src"
+  python -m uvicorn fastapi_app:app --reload --host 127.0.0.1 --port 8003
+) &
+ZSP_PID=$!
 
 wait
