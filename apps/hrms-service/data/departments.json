@@ -1,0 +1,30 @@
+[
+  {
+    "department_id": "DEPT-CYBER-OPS",
+    "department_name": "Cybersecurity Operations",
+    "department_owner_employee_id": "2001",
+    "cost_center": "CC-100",
+    "status": "ACTIVE"
+  },
+  {
+    "department_id": "DEPT-RISK",
+    "department_name": "Risk Management",
+    "department_owner_employee_id": "2002",
+    "cost_center": "CC-200",
+    "status": "ACTIVE"
+  },
+  {
+    "department_id": "DEPT-ASSET-MGMT",
+    "department_name": "Asset Management",
+    "department_owner_employee_id": "2003",
+    "cost_center": "CC-300",
+    "status": "ACTIVE"
+  },
+  {
+    "department_id": "DEPT-SEC-ENG",
+    "department_name": "Security Engineering",
+    "department_owner_employee_id": "2004",
+    "cost_center": "CC-400",
+    "status": "ACTIVE"
+  }
+]
