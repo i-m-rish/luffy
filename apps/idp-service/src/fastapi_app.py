@@ -3,6 +3,8 @@ from __future__ import annotations
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 
+from auth import ACCESS_TOKENS, AUTHORIZATION_CODES, IDP_USERS, REGISTERED_CLIENTS
+from auth_routes import router as auth_router
 from repository import (
     get_app_assignments,
     get_app_registrations,
@@ -16,9 +18,10 @@ from repository import (
 
 app = FastAPI(
     title="Luffy IdP Service",
-    description="Read-only IdP API and mini UI over sample identity provider data.",
-    version="0.1.0",
+    description="Enterprise-style local IdP app with identity registry, OAuth-like login, clients, tokens, and UI.",
+    version="0.2.0",
 )
+app.include_router(auth_router)
 
 
 def render_page(title: str, body: str) -> HTMLResponse:
@@ -40,10 +43,12 @@ def render_page(title: str, body: str) -> HTMLResponse:
           table {{ width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; }}
           th, td {{ padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; font-size: 14px; }}
           th {{ background: #f3f4f6; }}
-          .badge {{ display: inline-block; padding: 3px 8px; border-radius: 999px; background: #e5e7eb; font-size: 12px; }}
+          .badge {{ display: inline-block; padding: 3px 8px; border-radius: 999px; background: #e5e7eb; font-size: 12px; font-weight: 700; }}
           .risk-HIGH, .risk-CRITICAL {{ background: #fee2e2; color: #991b1b; }}
           .risk-MEDIUM {{ background: #fef3c7; color: #92400e; }}
           .risk-LOW {{ background: #dcfce7; color: #166534; }}
+          .status-operational {{ background: #dcfce7; color: #166534; }}
+          .muted {{ color: #64748b; }}
         </style>
       </head>
       <body>
@@ -51,9 +56,11 @@ def render_page(title: str, body: str) -> HTMLResponse:
           <h1>{title}</h1>
           <nav>
             <a href="/ui">Dashboard</a>
+            <a href="/ui/status">IdP Status</a>
             <a href="/ui/identities">Identities</a>
             <a href="/ui/groups">Groups</a>
             <a href="/ui/app-registrations">Apps</a>
+            <a href="/ui/oauth-clients">OAuth Clients</a>
             <a href="/ui/machine-identities">Machine Identities</a>
             <a href="/docs">API Docs</a>
           </nav>
@@ -120,7 +127,35 @@ def ui_dashboard() -> HTMLResponse:
         f'<div class="card"><div>{key.replace("_", " ").title()}</div><div class="metric">{value}</div></div>'
         for key, value in data.items()
     )
-    return render_page("Luffy IdP Dashboard", f'<section class="grid">{cards}</section>')
+    auth_cards = "".join(
+        [
+            f'<div class="card"><div>Registered OAuth Clients</div><div class="metric">{len(REGISTERED_CLIENTS)}</div></div>',
+            f'<div class="card"><div>Demo Login Users</div><div class="metric">{len(IDP_USERS)}</div></div>',
+            f'<div class="card"><div>Active Auth Codes</div><div class="metric">{len(AUTHORIZATION_CODES)}</div></div>',
+            f'<div class="card"><div>Active Tokens</div><div class="metric">{len(ACCESS_TOKENS)}</div></div>',
+        ]
+    )
+    return render_page(
+        "Luffy IdP Dashboard",
+        f'<section class="grid">{cards}{auth_cards}</section>',
+    )
+
+
+@app.get("/ui/status", response_class=HTMLResponse)
+def ui_status() -> HTMLResponse:
+    rows = "".join(
+        [
+            "<tr><td>Issuer</td><td>http://127.0.0.1:8002</td></tr>",
+            "<tr><td>Status</td><td><span class='badge status-operational'>operational</span></td></tr>",
+            "<tr><td>Supported Flow</td><td>authorization_code_demo</td></tr>",
+            "<tr><td>Token Format</td><td>opaque_demo_token</td></tr>",
+            f"<tr><td>Registered Clients</td><td>{len(REGISTERED_CLIENTS)}</td></tr>",
+            f"<tr><td>Demo Users</td><td>{len(IDP_USERS)}</td></tr>",
+            f"<tr><td>Active Auth Codes</td><td>{len(AUTHORIZATION_CODES)}</td></tr>",
+            f"<tr><td>Active Tokens</td><td>{len(ACCESS_TOKENS)}</td></tr>",
+        ]
+    )
+    return render_page("IdP Status", f"<table><tr><th>Control</th><th>Value</th></tr>{rows}</table>")
 
 
 @app.get("/ui/identities", response_class=HTMLResponse)
@@ -148,6 +183,15 @@ def ui_app_registrations() -> HTMLResponse:
         for a in get_app_registrations()
     )
     return render_page("IdP App Registrations", f"<table><tr><th>App ID</th><th>Name</th><th>Protocol</th><th>SSO</th><th>Status</th></tr>{rows}</table>")
+
+
+@app.get("/ui/oauth-clients", response_class=HTMLResponse)
+def ui_oauth_clients() -> HTMLResponse:
+    rows = "".join(
+        f"<tr><td>{client_id}</td><td>{client['client_name']}</td><td>{client['redirect_uri']}</td><td>{', '.join(client['allowed_roles'])}</td></tr>"
+        for client_id, client in REGISTERED_CLIENTS.items()
+    )
+    return render_page("IdP OAuth Clients", f"<table><tr><th>Client ID</th><th>Name</th><th>Redirect URI</th><th>Allowed Roles</th></tr>{rows}</table>")
 
 
 @app.get("/ui/machine-identities", response_class=HTMLResponse)
