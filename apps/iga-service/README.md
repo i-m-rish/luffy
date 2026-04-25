@@ -51,13 +51,14 @@ Can access be reviewed/certified later?
 
 ```text
 Integration type: IGA/governance platform
-Primary API style: GraphQL for governance relationship queries
+Primary API style now: standard-library read-only HTTP API
+Primary API style later: GraphQL for governance relationship queries
 Data style in milestone 1: normalized JSON
 UI in milestone 1: design only; governance UI later
 Primary implementation language: Python
 ```
 
-## Why GraphQL here
+## Why GraphQL later
 
 IGA data is highly connected:
 
@@ -95,12 +96,68 @@ apps/iga-service/
 │   └── example-queries.graphql
 ├── scripts/
 │   └── validate_iga_data.py
+├── src/
+│   ├── repository.py
+│   └── server.py
 └── tests/
-    └── test_iga_data.py
+    ├── test_iga_data.py
+    └── test_iga_api.py
+```
+
+## Validate data
+
+From the repository root:
+
+```bash
+python apps/iga-service/scripts/validate_iga_data.py
+```
+
+## Run tests
+
+From the repository root:
+
+```bash
+python -m pytest apps/iga-service/tests -q
+```
+
+## Run local read-only API
+
+From the repository root:
+
+```bash
+cd apps/iga-service/src
+python server.py
+```
+
+The API runs at:
+
+```text
+http://127.0.0.1:8001
+```
+
+## Read-only API endpoints
+
+```text
+GET /health
+GET /applications
+GET /identities
+GET /accounts
+GET /entitlements
+GET /assignments
+GET /correlation-results
+GET /governance/orphan-accounts
+GET /governance/high-risk-access
+GET /governance/identity/{identity_id}/access
+```
+
+Example:
+
+```text
+GET /governance/identity/IGA-IDENTITY-1001/access
 ```
 
 ## Milestone 1 scope
 
-Milestone 1 creates the IGA normalized model only.
+Milestone 1 creates the IGA normalized model and a local read-only API over the normalized JSON data.
 
 No real provisioning, no real approvals, no real access changes, and no production integration.
