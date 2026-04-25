@@ -43,5 +43,50 @@
     "entitlement_description": "Can administer users, roles, and security asset platform settings.",
     "risk_level": "CRITICAL",
     "status": "ACTIVE"
+  },
+  {
+    "entitlement_id": "IGA-ENT-ZSP-VIEWER",
+    "application_id": "zsp-jit-app",
+    "native_entitlement_id": "ZSP_VIEWER",
+    "entitlement_name": "ZSP Viewer",
+    "entitlement_description": "Can view the Secure Operations Portal without requesting temporary privilege.",
+    "risk_level": "LOW",
+    "status": "ACTIVE"
+  },
+  {
+    "entitlement_id": "IGA-ENT-ZSP-OPERATOR",
+    "application_id": "zsp-jit-app",
+    "native_entitlement_id": "ZSP_OPERATOR",
+    "entitlement_name": "ZSP Operator",
+    "entitlement_description": "Can request temporary privileged access through the Secure Operations Portal.",
+    "risk_level": "HIGH",
+    "status": "ACTIVE"
+  },
+  {
+    "entitlement_id": "IGA-ENT-ZSP-APPROVER",
+    "application_id": "zsp-jit-app",
+    "native_entitlement_id": "ZSP_APPROVER",
+    "entitlement_name": "ZSP Approver",
+    "entitlement_description": "Can approve temporary access requests and view audit activity.",
+    "risk_level": "HIGH",
+    "status": "ACTIVE"
+  },
+  {
+    "entitlement_id": "IGA-ENT-ZSP-ADMIN",
+    "application_id": "zsp-jit-app",
+    "native_entitlement_id": "ZSP_ADMIN",
+    "entitlement_name": "ZSP Administrator",
+    "entitlement_description": "Can administer Secure Operations Portal users, requests, and audit configuration.",
+    "risk_level": "CRITICAL",
+    "status": "ACTIVE"
+  },
+  {
+    "entitlement_id": "IGA-ENT-ZSP-SESSION-ADMIN-TEMP",
+    "application_id": "zsp-jit-app",
+    "native_entitlement_id": "ZSP_SESSION_ADMIN",
+    "entitlement_name": "Temporary Session Administrator",
+    "entitlement_description": "Time-bound elevated role used for zero standing privilege emergency operations.",
+    "risk_level": "CRITICAL",
+    "status": "ACTIVE"
   }
 ]
