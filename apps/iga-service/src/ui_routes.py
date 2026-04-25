@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
 
+from auth import require_ui_permission
 from services.governance_service import governance_service
 from ui.components import action_tile, badge, callout, metric_card, page_shell, table
 
@@ -31,8 +32,19 @@ def render_application_summary_table() -> str:
     )
 
 
+def enforce_ui(request: Request, permission: str) -> RedirectResponse | None:
+    result = require_ui_permission(request, permission)
+    if isinstance(result, RedirectResponse):
+        return result
+    return None
+
+
 @router.get("/ui", response_class=HTMLResponse)
-def ui_dashboard() -> HTMLResponse:
+def ui_dashboard(request: Request) -> HTMLResponse | RedirectResponse:
+    redirect = enforce_ui(request, "VIEW_DASHBOARD")
+    if redirect:
+        return redirect
+
     data = governance_service.dashboard()
     top_risks = [risk for risk in data["top_risks"] if risk]
     cards = {
@@ -74,12 +86,18 @@ def ui_dashboard() -> HTMLResponse:
 
 
 @router.get("/ui/applications", response_class=HTMLResponse)
-def ui_applications() -> HTMLResponse:
+def ui_applications(request: Request) -> HTMLResponse | RedirectResponse:
+    redirect = enforce_ui(request, "VIEW_APPLICATIONS")
+    if redirect:
+        return redirect
     return HTMLResponse(page_shell("Sources", render_application_summary_table(), "Applications onboarded into governance."))
 
 
 @router.get("/ui/identities", response_class=HTMLResponse)
-def ui_identities() -> HTMLResponse:
+def ui_identities(request: Request) -> HTMLResponse | RedirectResponse:
+    redirect = enforce_ui(request, "VIEW_IDENTITIES")
+    if redirect:
+        return redirect
     rows = []
     for identity in governance_service.identity_access_summary():
         status = str(identity["identity_status"])
@@ -103,7 +121,10 @@ def ui_identities() -> HTMLResponse:
 
 
 @router.get("/ui/identity/{identity_id}/access", response_class=HTMLResponse)
-def ui_identity_access(identity_id: str) -> HTMLResponse:
+def ui_identity_access(request: Request, identity_id: str) -> HTMLResponse | RedirectResponse:
+    redirect = enforce_ui(request, "VIEW_IDENTITIES")
+    if redirect:
+        return redirect
     access = governance_service.identity_access(identity_id)
     if access is None:
         return HTMLResponse(page_shell("Identity Not Found", f"<div class='card'>No identity found for {identity_id}</div>"))
@@ -140,7 +161,10 @@ def ui_identity_access(identity_id: str) -> HTMLResponse:
 
 
 @router.get("/ui/accounts", response_class=HTMLResponse)
-def ui_accounts() -> HTMLResponse:
+def ui_accounts(request: Request) -> HTMLResponse | RedirectResponse:
+    redirect = enforce_ui(request, "VIEW_ACCOUNTS")
+    if redirect:
+        return redirect
     rows = []
     for account in governance_service.accounts():
         account_status = str(account["account_status"])
@@ -159,7 +183,10 @@ def ui_accounts() -> HTMLResponse:
 
 
 @router.get("/ui/entitlements", response_class=HTMLResponse)
-def ui_entitlements() -> HTMLResponse:
+def ui_entitlements(request: Request) -> HTMLResponse | RedirectResponse:
+    redirect = enforce_ui(request, "VIEW_ENTITLEMENTS")
+    if redirect:
+        return redirect
     rows = []
     for entitlement in governance_service.entitlements():
         risk = str(entitlement["risk_level"])
@@ -176,7 +203,10 @@ def ui_entitlements() -> HTMLResponse:
 
 
 @router.get("/ui/correlation-results", response_class=HTMLResponse)
-def ui_correlation_results() -> HTMLResponse:
+def ui_correlation_results(request: Request) -> HTMLResponse | RedirectResponse:
+    redirect = enforce_ui(request, "VIEW_CORRELATION")
+    if redirect:
+        return redirect
     rows = []
     for result in governance_service.correlation_results():
         status = str(result["result"])
@@ -196,7 +226,10 @@ def ui_correlation_results() -> HTMLResponse:
 
 
 @router.get("/ui/access-reviews", response_class=HTMLResponse)
-def ui_access_reviews() -> HTMLResponse:
+def ui_access_reviews(request: Request) -> HTMLResponse | RedirectResponse:
+    redirect = enforce_ui(request, "VIEW_ACCESS_REVIEWS")
+    if redirect:
+        return redirect
     rows = [
         "<tr><td>Quarterly JDBC Access Review</td><td>Security Asset Operations</td><td>Draft</td><td>5 access items</td><td>App Owner</td></tr>",
         "<tr><td>Privileged Access Review</td><td>All Critical Entitlements</td><td>Design</td><td>1 privileged item</td><td>Security Admin</td></tr>",
@@ -207,7 +240,10 @@ def ui_access_reviews() -> HTMLResponse:
 
 
 @router.get("/ui/policy-violations", response_class=HTMLResponse)
-def ui_policy_violations() -> HTMLResponse:
+def ui_policy_violations(request: Request) -> HTMLResponse | RedirectResponse:
+    redirect = enforce_ui(request, "VIEW_POLICY_VIOLATIONS")
+    if redirect:
+        return redirect
     rows = [
         "<tr><td>ORPHAN_ACCOUNT</td><td>ORPHAN01 has no correlated identity.</td><td>High</td><td>Open</td></tr>",
         "<tr><td>HIGH_RISK_ACCESS</td><td>System Administrator entitlement exists and needs certification.</td><td>Critical</td><td>Open</td></tr>",
@@ -218,7 +254,10 @@ def ui_policy_violations() -> HTMLResponse:
 
 
 @router.get("/ui/orphan-accounts", response_class=HTMLResponse)
-def ui_orphan_accounts() -> HTMLResponse:
+def ui_orphan_accounts(request: Request) -> HTMLResponse | RedirectResponse:
+    redirect = enforce_ui(request, "VIEW_ORPHANS")
+    if redirect:
+        return redirect
     rows = []
     for item in governance_service.orphan_accounts():
         account = item["account"]
@@ -237,7 +276,10 @@ def ui_orphan_accounts() -> HTMLResponse:
 
 
 @router.get("/ui/high-risk-access", response_class=HTMLResponse)
-def ui_high_risk_access() -> HTMLResponse:
+def ui_high_risk_access(request: Request) -> HTMLResponse | RedirectResponse:
+    redirect = enforce_ui(request, "VIEW_HIGH_RISK")
+    if redirect:
+        return redirect
     rows = []
     for item in governance_service.high_risk_access():
         account = item["account"]
