@@ -6,6 +6,9 @@ Detailed service-specific diagrams should live inside each service folder, for e
 
 ```text
 apps/jdbc-target/docs/diagrams.md
+apps/hrms-service/docs/diagrams.md
+apps/idp-service/docs/diagrams.md
+apps/iga-service/docs/diagrams.md
 ```
 
 See also:
@@ -19,11 +22,12 @@ docs/diagram-strategy.md
 ```text
 1. System context diagram
 2. Container/service architecture
-3. Identity lifecycle sequence
-4. Access request and provisioning sequence
-5. API security and SIEM overview
-6. UI/module map
-7. Future AI agent layer
+3. Milestone 1 foundation flow
+4. Identity lifecycle and aggregation sequence
+5. Access request and provisioning sequence
+6. API security and SIEM overview
+7. UI/module map
+8. Future AI agent layer
 ```
 
 ---
@@ -42,10 +46,11 @@ flowchart LR
     ADMIN -->|configure apps / review risks| LUFFY
     AGENT -->|recommend / summarize / flag risk| LUFFY
 
-    LUFFY -->|governs| TARGETS[Target Apps<br/>JDBC / REST / SCIM / PAM]
+    LUFFY -->|governs access through| IGA[IGA Governance Layer]
+    LUFFY -->|uses lifecycle data from| HRMS[HRMS Source]
+    LUFFY -->|uses digital identity from| IDP[IdP Source]
+    LUFFY -->|aggregates access from| TARGETS[Target Apps<br/>JDBC / REST / SCIM / PAM]
     LUFFY -->|monitors| SECURITY[API Security + SIEM]
-    LUFFY -->|uses lifecycle data| HRMS[HRMS Source]
-    LUFFY -->|uses digital identity| IDP[IdP Source]
 ```
 
 ---
@@ -54,9 +59,9 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    HRMS[hrms-service<br/>REST + DB later<br/>Worker lifecycle]
-    IDP[idp-service<br/>GraphQL + REST login<br/>Identities / Groups / Apps]
-    IGA[iga-service<br/>GraphQL<br/>Governance / Correlation]
+    HRMS[hrms-service<br/>Worker lifecycle source]
+    IDP[idp-service<br/>GraphQL<br/>Identities / Groups / Apps / NHI]
+    IGA[iga-service<br/>GraphQL<br/>Governance / Correlation / Catalog]
 
     JDBC[jdbc-target<br/>SQL / JDBC<br/>Security Asset Ops]
     WS[webservices-target<br/>REST + Cloud DB later<br/>Risk Portal]
@@ -67,13 +72,14 @@ flowchart LR
     SIEM[siem-detection-service<br/>Events / Alerts / Detections]
     DESKTOP[desktop-agent-app<br/>Device Posture / Heartbeat]
 
-    HRMS -->|worker lifecycle| IDP
-    IDP -->|identities, groups, app registrations| IGA
+    HRMS -->|worker lifecycle / employment status| IGA
+    HRMS -->|worker attributes later| IDP
+    IDP -->|digital identities, groups, app registrations, NHI| IGA
+    JDBC -->|accounts, entitlements, assignments| IGA
 
-    IGA -->|JDBC aggregation| JDBC
-    IGA -->|REST aggregation/provisioning| WS
-    IGA -->|SCIM provisioning| SCIM
-    IGA -->|PAM governance| PAM
+    IGA -->|future REST aggregation/provisioning| WS
+    IGA -->|future SCIM provisioning| SCIM
+    IGA -->|future PAM governance| PAM
 
     DESKTOP -->|device heartbeat later| SCIM
     DESKTOP -->|machine identity evidence later| IGA
@@ -84,40 +90,60 @@ flowchart LR
     APIGW -. posture scan .-> SCIM
     APIGW -. posture scan .-> PAM
 
-    IDP -->|auth/security events| SIEM
-    IGA -->|governance audit events| SIEM
+    IDP -->|auth/security events later| SIEM
+    IGA -->|governance audit events later| SIEM
     JDBC -->|aggregation findings later| SIEM
-    WS -->|API events| SIEM
-    SCIM -->|SCIM provisioning events| SIEM
-    PAM -->|privileged access audit| SIEM
-    APIGW -->|findings / posture score| SIEM
+    WS -->|API events later| SIEM
+    SCIM -->|SCIM provisioning events later| SIEM
+    PAM -->|privileged access audit later| SIEM
+    APIGW -->|findings / posture score later| SIEM
 ```
 
 ---
 
-## 3. Identity Lifecycle Sequence
+## 3. Milestone 1 Foundation Flow
+
+```mermaid
+flowchart LR
+    HRMS_DATA[hrms-service<br/>workers / departments / positions / lifecycle events]
+    IDP_DATA[idp-service<br/>identities / groups / app registrations / machine identities]
+    JDBC_DATA[jdbc-target<br/>users / roles / user_roles / IAM views]
+    IGA_DATA[iga-service<br/>application catalog / normalized identities / accounts / entitlements / correlation]
+
+    HRMS_DATA -->|employment truth| IGA_DATA
+    IDP_DATA -->|digital identity truth| IGA_DATA
+    JDBC_DATA -->|target app access truth| IGA_DATA
+
+    IGA_DATA --> GOVERNANCE[Governance visibility<br/>who has what access / matched vs orphan / high-risk access]
+```
+
+---
+
+## 4. Identity Lifecycle and Aggregation Sequence
 
 ```mermaid
 sequenceDiagram
     participant HRMS as hrms-service
     participant IDP as idp-service
-    participant IGA as iga-service
     participant JDBC as jdbc-target
-    participant SIEM as siem-detection-service
+    participant IGA as iga-service
+    participant SIEM as siem-detection-service later
 
-    HRMS->>HRMS: Create JOINER / MOVER / LEAVER event
-    HRMS->>IDP: Sync worker attributes
-    IDP->>IDP: Create or update digital identity
-    IDP->>IGA: Provide identity aggregation data
-    JDBC->>IGA: Provide account and entitlement data via IAM views
-    IGA->>IGA: Correlate account to identity
-    IGA->>IGA: Detect matched, unmatched, or orphan accounts
-    IGA->>SIEM: Send lifecycle and correlation audit event
+    HRMS->>HRMS: Maintain worker and lifecycle events
+    HRMS->>IDP: Sync worker attributes later
+    IDP->>IDP: Maintain digital identities, groups, app registrations, NHI
+    HRMS->>IGA: Provide worker/lifecycle context
+    IDP->>IGA: Provide identity/group/app registration data
+    JDBC->>IGA: Provide account, entitlement, and assignment data
+    IGA->>IGA: Normalize identities, accounts, entitlements, assignments
+    IGA->>IGA: Correlate accounts using employee_id, lan_id, email
+    IGA->>IGA: Detect matched, partial, and orphan accounts
+    IGA->>SIEM: Send lifecycle/correlation audit event later
 ```
 
 ---
 
-## 4. Access Request and Provisioning Sequence
+## 5. Access Request and Provisioning Sequence
 
 ```mermaid
 sequenceDiagram
@@ -129,19 +155,19 @@ sequenceDiagram
     participant PAM as pam-target
     participant SIEM as siem-detection-service
 
-    User->>IGA: Request access
+    User->>IGA: Request access later
     IGA->>IGA: Validate identity, app, entitlement, risk
     IGA->>Manager: Route approval
     Manager->>IGA: Approve / reject
 
-    alt Approved SCIM access
+    alt Approved SCIM access later
         IGA->>Gateway: Send provisioning action for inspection
         Gateway->>Gateway: Check auth, risk, allowlist, payload
         Gateway->>SCIM: Forward allowed SCIM group assignment
         SCIM->>SIEM: Send provisioning event
     end
 
-    alt Approved PAM access
+    alt Approved PAM access later
         IGA->>Gateway: Send PAM safe membership action
         Gateway->>Gateway: Require step-up if critical
         Gateway->>PAM: Forward allowed safe membership change
@@ -153,7 +179,7 @@ sequenceDiagram
 
 ---
 
-## 5. API Security and SIEM Overview
+## 6. API Security and SIEM Overview
 
 ```mermaid
 flowchart LR
@@ -185,19 +211,18 @@ flowchart LR
 
 ---
 
-## 6. UI / Module Map
+## 7. UI / Module Map
 
 ```mermaid
 flowchart TD
     CONSOLE[luffy-console<br/>future unified UI]
 
-    IGA_UI[IGA Module<br/>requests / approvals / certifications]
-    IDP_UI[IdP Module<br/>identities / groups / app registrations]
+    IGA_UI[IGA Module<br/>application catalog / identities / accounts / access / correlation]
+    IDP_UI[IdP Module<br/>identities / groups / app registrations / NHI]
     HRMS_UI[HRMS Module<br/>workers / lifecycle events]
     PAM_UI[PAM Module<br/>safes / checkout / sessions]
     API_UI[API Security Module<br/>posture / findings / policies]
     SIEM_UI[SIEM Module<br/>events / alerts / investigations]
-    NHI_UI[Machine Identity Module<br/>secrets / certs / tokens]
     AGENT_UI[Agents Module<br/>recommendations / evidence]
 
     CONSOLE --> IGA_UI
@@ -206,13 +231,12 @@ flowchart TD
     CONSOLE --> PAM_UI
     CONSOLE --> API_UI
     CONSOLE --> SIEM_UI
-    CONSOLE --> NHI_UI
     CONSOLE --> AGENT_UI
 ```
 
 ---
 
-## 7. Future AI Agent Layer
+## 8. Future AI Agent Layer
 
 ```mermaid
 flowchart TD
