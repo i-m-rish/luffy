@@ -38,5 +38,37 @@
     "assignment_status": "ACTIVE",
     "assigned_by": "UNKNOWN",
     "assigned_at": "2026-01-10T10:20:00Z"
+  },
+  {
+    "assignment_id": "IGA-ASN-ZSP-1",
+    "account_id": "IGA-ACC-ZSP-ADMIN",
+    "entitlement_id": "IGA-ENT-ZSP-ADMIN",
+    "assignment_status": "ACTIVE",
+    "assigned_by": "IDP_ROLE_MAPPING",
+    "assigned_at": "2026-04-25T20:00:00Z"
+  },
+  {
+    "assignment_id": "IGA-ASN-ZSP-2",
+    "account_id": "IGA-ACC-ZSP-REVIEWER",
+    "entitlement_id": "IGA-ENT-ZSP-APPROVER",
+    "assignment_status": "ACTIVE",
+    "assigned_by": "IDP_ROLE_MAPPING",
+    "assigned_at": "2026-04-25T20:05:00Z"
+  },
+  {
+    "assignment_id": "IGA-ASN-ZSP-3",
+    "account_id": "IGA-ACC-ZSP-READER",
+    "entitlement_id": "IGA-ENT-ZSP-VIEWER",
+    "assignment_status": "ACTIVE",
+    "assigned_by": "IDP_ROLE_MAPPING",
+    "assigned_at": "2026-04-25T20:10:00Z"
+  },
+  {
+    "assignment_id": "IGA-ASN-ZSP-4",
+    "account_id": "IGA-ACC-ZSP-ADMIN",
+    "entitlement_id": "IGA-ENT-ZSP-SESSION-ADMIN-TEMP",
+    "assignment_status": "TEMPORARY_ACTIVE",
+    "assigned_by": "ZSP_JIT_ELEVATION",
+    "assigned_at": "2026-04-25T20:15:00Z"
   }
 ]
