@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from auth import require_ui_permission
 from services.governance_service import governance_service
@@ -39,8 +39,8 @@ def enforce_ui(request: Request, permission: str) -> RedirectResponse | None:
     return None
 
 
-@router.get("/ui", response_class=HTMLResponse)
-def ui_dashboard(request: Request) -> HTMLResponse | RedirectResponse:
+@router.get("/ui", response_class=HTMLResponse, response_model=None)
+def ui_dashboard(request: Request) -> Response:
     redirect = enforce_ui(request, "VIEW_DASHBOARD")
     if redirect:
         return redirect
@@ -85,16 +85,16 @@ def ui_dashboard(request: Request) -> HTMLResponse | RedirectResponse:
     )
 
 
-@router.get("/ui/applications", response_class=HTMLResponse)
-def ui_applications(request: Request) -> HTMLResponse | RedirectResponse:
+@router.get("/ui/applications", response_class=HTMLResponse, response_model=None)
+def ui_applications(request: Request) -> Response:
     redirect = enforce_ui(request, "VIEW_APPLICATIONS")
     if redirect:
         return redirect
     return HTMLResponse(page_shell("Sources", render_application_summary_table(), "Applications onboarded into governance."))
 
 
-@router.get("/ui/identities", response_class=HTMLResponse)
-def ui_identities(request: Request) -> HTMLResponse | RedirectResponse:
+@router.get("/ui/identities", response_class=HTMLResponse, response_model=None)
+def ui_identities(request: Request) -> Response:
     redirect = enforce_ui(request, "VIEW_IDENTITIES")
     if redirect:
         return redirect
@@ -120,8 +120,8 @@ def ui_identities(request: Request) -> HTMLResponse | RedirectResponse:
     return HTMLResponse(page_shell("Identity Warehouse", body, "Governed people and their access footprint."))
 
 
-@router.get("/ui/identity/{identity_id}/access", response_class=HTMLResponse)
-def ui_identity_access(request: Request, identity_id: str) -> HTMLResponse | RedirectResponse:
+@router.get("/ui/identity/{identity_id}/access", response_class=HTMLResponse, response_model=None)
+def ui_identity_access(request: Request, identity_id: str) -> Response:
     redirect = enforce_ui(request, "VIEW_IDENTITIES")
     if redirect:
         return redirect
@@ -160,8 +160,8 @@ def ui_identity_access(request: Request, identity_id: str) -> HTMLResponse | Red
     return HTMLResponse(page_shell("Identity Access Profile", body))
 
 
-@router.get("/ui/accounts", response_class=HTMLResponse)
-def ui_accounts(request: Request) -> HTMLResponse | RedirectResponse:
+@router.get("/ui/accounts", response_class=HTMLResponse, response_model=None)
+def ui_accounts(request: Request) -> Response:
     redirect = enforce_ui(request, "VIEW_ACCOUNTS")
     if redirect:
         return redirect
@@ -182,8 +182,8 @@ def ui_accounts(request: Request) -> HTMLResponse | RedirectResponse:
     return HTMLResponse(page_shell("Accounts", table(["Account", "Source", "Login", "Email", "Status", "Correlation"], rows)))
 
 
-@router.get("/ui/entitlements", response_class=HTMLResponse)
-def ui_entitlements(request: Request) -> HTMLResponse | RedirectResponse:
+@router.get("/ui/entitlements", response_class=HTMLResponse, response_model=None)
+def ui_entitlements(request: Request) -> Response:
     redirect = enforce_ui(request, "VIEW_ENTITLEMENTS")
     if redirect:
         return redirect
@@ -202,8 +202,8 @@ def ui_entitlements(request: Request) -> HTMLResponse | RedirectResponse:
     return HTMLResponse(page_shell("Entitlement Catalog", table(["Entitlement", "Source", "Display Name", "Description", "Risk"], rows)))
 
 
-@router.get("/ui/correlation-results", response_class=HTMLResponse)
-def ui_correlation_results(request: Request) -> HTMLResponse | RedirectResponse:
+@router.get("/ui/correlation-results", response_class=HTMLResponse, response_model=None)
+def ui_correlation_results(request: Request) -> Response:
     redirect = enforce_ui(request, "VIEW_CORRELATION")
     if redirect:
         return redirect
@@ -225,8 +225,8 @@ def ui_correlation_results(request: Request) -> HTMLResponse | RedirectResponse:
     return HTMLResponse(page_shell("Correlation Results", body, "Account-to-identity matching results."))
 
 
-@router.get("/ui/access-reviews", response_class=HTMLResponse)
-def ui_access_reviews(request: Request) -> HTMLResponse | RedirectResponse:
+@router.get("/ui/access-reviews", response_class=HTMLResponse, response_model=None)
+def ui_access_reviews(request: Request) -> Response:
     redirect = enforce_ui(request, "VIEW_ACCESS_REVIEWS")
     if redirect:
         return redirect
@@ -239,8 +239,8 @@ def ui_access_reviews(request: Request) -> HTMLResponse | RedirectResponse:
     return HTMLResponse(page_shell("Access Reviews", body, "Certification-style access review queue."))
 
 
-@router.get("/ui/policy-violations", response_class=HTMLResponse)
-def ui_policy_violations(request: Request) -> HTMLResponse | RedirectResponse:
+@router.get("/ui/policy-violations", response_class=HTMLResponse, response_model=None)
+def ui_policy_violations(request: Request) -> Response:
     redirect = enforce_ui(request, "VIEW_POLICY_VIOLATIONS")
     if redirect:
         return redirect
@@ -253,8 +253,8 @@ def ui_policy_violations(request: Request) -> HTMLResponse | RedirectResponse:
     return HTMLResponse(page_shell("Policy Violations", body, "SOD, orphan, leaver, and privileged access findings."))
 
 
-@router.get("/ui/orphan-accounts", response_class=HTMLResponse)
-def ui_orphan_accounts(request: Request) -> HTMLResponse | RedirectResponse:
+@router.get("/ui/orphan-accounts", response_class=HTMLResponse, response_model=None)
+def ui_orphan_accounts(request: Request) -> Response:
     redirect = enforce_ui(request, "VIEW_ORPHANS")
     if redirect:
         return redirect
@@ -275,8 +275,8 @@ def ui_orphan_accounts(request: Request) -> HTMLResponse | RedirectResponse:
     return HTMLResponse(page_shell("Orphan Accounts", table(["Account", "Source", "Login", "Email", "Reason"], rows)))
 
 
-@router.get("/ui/high-risk-access", response_class=HTMLResponse)
-def ui_high_risk_access(request: Request) -> HTMLResponse | RedirectResponse:
+@router.get("/ui/high-risk-access", response_class=HTMLResponse, response_model=None)
+def ui_high_risk_access(request: Request) -> Response:
     redirect = enforce_ui(request, "VIEW_HIGH_RISK")
     if redirect:
         return redirect
