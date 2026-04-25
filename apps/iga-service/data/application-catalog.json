@@ -1,0 +1,74 @@
+[
+  {
+    "application_id": "hrms-service",
+    "application_name": "Luffy HRMS Service",
+    "application_type": "HRMS",
+    "integration_pattern": "JSON",
+    "risk_level": "MEDIUM",
+    "status": "ACTIVE",
+    "owner": "HR Technology"
+  },
+  {
+    "application_id": "idp-service",
+    "application_name": "Luffy IdP Service",
+    "application_type": "IDP",
+    "integration_pattern": "GRAPHQL",
+    "risk_level": "HIGH",
+    "status": "ACTIVE",
+    "owner": "IAM Engineering"
+  },
+  {
+    "application_id": "jdbc-target",
+    "application_name": "Security Asset Operations",
+    "application_type": "TARGET",
+    "integration_pattern": "JDBC",
+    "risk_level": "HIGH",
+    "status": "ACTIVE",
+    "owner": "Cybersecurity Operations"
+  },
+  {
+    "application_id": "webservices-target",
+    "application_name": "Security Risk Portal",
+    "application_type": "TARGET",
+    "integration_pattern": "REST",
+    "risk_level": "HIGH",
+    "status": "DESIGN",
+    "owner": "Risk Management"
+  },
+  {
+    "application_id": "scim-target",
+    "application_name": "Endpoint Security SaaS",
+    "application_type": "TARGET",
+    "integration_pattern": "SCIM",
+    "risk_level": "HIGH",
+    "status": "DESIGN",
+    "owner": "Endpoint Security"
+  },
+  {
+    "application_id": "pam-target",
+    "application_name": "Privileged Access Management",
+    "application_type": "PAM",
+    "integration_pattern": "PAM_API",
+    "risk_level": "CRITICAL",
+    "status": "DESIGN",
+    "owner": "Security Engineering"
+  },
+  {
+    "application_id": "api-security-gateway",
+    "application_name": "API Security Gateway",
+    "application_type": "SECURITY",
+    "integration_pattern": "REST",
+    "risk_level": "CRITICAL",
+    "status": "DESIGN",
+    "owner": "Security Engineering"
+  },
+  {
+    "application_id": "siem-detection-service",
+    "application_name": "SIEM Detection Service",
+    "application_type": "SECURITY",
+    "integration_pattern": "EVENT_API",
+    "risk_level": "HIGH",
+    "status": "DESIGN",
+    "owner": "Security Operations"
+  }
+]
