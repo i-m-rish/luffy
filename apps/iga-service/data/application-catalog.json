@@ -12,10 +12,19 @@
     "application_id": "idp-service",
     "application_name": "Luffy IdP Service",
     "application_type": "IDP",
-    "integration_pattern": "GRAPHQL",
+    "integration_pattern": "OIDC_DEMO",
     "risk_level": "HIGH",
     "status": "ACTIVE",
     "owner": "IAM Engineering"
+  },
+  {
+    "application_id": "iga-service",
+    "application_name": "Luffy Identity Security Console",
+    "application_type": "IGA",
+    "integration_pattern": "OIDC_DEMO + FASTAPI",
+    "risk_level": "CRITICAL",
+    "status": "ACTIVE",
+    "owner": "IAM Governance"
   },
   {
     "application_id": "jdbc-target",
@@ -25,6 +34,15 @@
     "risk_level": "HIGH",
     "status": "ACTIVE",
     "owner": "Cybersecurity Operations"
+  },
+  {
+    "application_id": "zsp-jit-app",
+    "application_name": "Secure Operations Portal",
+    "application_type": "SAAS_TARGET",
+    "integration_pattern": "OIDC_JIT_ZSP",
+    "risk_level": "CRITICAL",
+    "status": "ACTIVE",
+    "owner": "Security Operations"
   },
   {
     "application_id": "webservices-target",
