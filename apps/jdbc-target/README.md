@@ -13,6 +13,7 @@ Integration type: JDBC / database aggregation
 Primary data store: SQL database
 IGA read path: IAM-safe database views
 UI in milestone 1: No
+Primary implementation language: Python
 ```
 
 ## Why database-first
@@ -40,9 +41,10 @@ apps/jdbc-target/
 │   ├── seed.sql
 │   └── views.sql
 ├── docs/
-│   └── access-model.md
-└── scripts/
-    └── run-sqlite.sh
+├── scripts/
+│   └── run_sqlite.py
+└── tests/
+    └── test_jdbc_target.py
 ```
 
 ## Security model
@@ -78,19 +80,39 @@ System Administrator
 | `vw_iam_entitlements` | Entitlement aggregation view |
 | `vw_iam_account_entitlements` | Account-entitlement aggregation view |
 
-## Run locally with SQLite
+## Run locally with Python
 
 From the repository root:
 
 ```bash
 cd apps/jdbc-target
-bash scripts/run-sqlite.sh
+python scripts/run_sqlite.py
 ```
 
 This creates a local SQLite database at:
 
 ```text
 apps/jdbc-target/jdbc-target.db
+```
+
+## Run tests
+
+From the repository root:
+
+```bash
+python -m pytest apps/jdbc-target/tests
+```
+
+The tests verify:
+
+```text
+Database builds successfully
+Required tables exist
+Required IAM views exist
+Seed data count is correct
+Critical entitlement is available for governance
+Orphan-style account exists for correlation testing
+Account-entitlement assignments expose risk level
 ```
 
 ## UI decision
