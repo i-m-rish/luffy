@@ -1,0 +1,42 @@
+[
+  {
+    "membership_id": "MEM-1001-001",
+    "identity_id": "IDP-1001",
+    "group_id": "GRP-ASSET-VIEWER",
+    "membership_status": "ACTIVE",
+    "assigned_by": "IGA-SEED",
+    "assigned_at": "2026-01-10T10:00:00Z"
+  },
+  {
+    "membership_id": "MEM-1002-001",
+    "identity_id": "IDP-1002",
+    "group_id": "GRP-COMPLIANCE-REVIEWER",
+    "membership_status": "ACTIVE",
+    "assigned_by": "IGA-SEED",
+    "assigned_at": "2026-01-10T10:05:00Z"
+  },
+  {
+    "membership_id": "MEM-1004-001",
+    "identity_id": "IDP-1004",
+    "group_id": "GRP-SECURITY-ADMIN",
+    "membership_status": "ACTIVE",
+    "assigned_by": "SECURITY-ADMIN",
+    "assigned_at": "2026-01-10T10:15:00Z"
+  },
+  {
+    "membership_id": "MEM-1005-001",
+    "identity_id": "IDP-1005",
+    "group_id": "GRP-PAM-CHECKOUT",
+    "membership_status": "ACTIVE",
+    "assigned_by": "IGA-SEED",
+    "assigned_at": "2026-02-01T10:00:00Z"
+  },
+  {
+    "membership_id": "MEM-1004-002",
+    "identity_id": "IDP-1004",
+    "group_id": "GRP-API-SECURITY-ANALYST",
+    "membership_status": "ACTIVE",
+    "assigned_by": "SECURITY-ADMIN",
+    "assigned_at": "2026-01-15T10:00:00Z"
+  }
+]
