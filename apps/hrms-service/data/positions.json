@@ -1,0 +1,37 @@
+[
+  {
+    "position_id": "POS-SEC-ANALYST",
+    "job_title": "Security Analyst",
+    "job_family": "Cybersecurity",
+    "risk_category": "MEDIUM",
+    "status": "ACTIVE"
+  },
+  {
+    "position_id": "POS-RISK-ANALYST",
+    "job_title": "Risk Analyst",
+    "job_family": "Risk Management",
+    "risk_category": "MEDIUM",
+    "status": "ACTIVE"
+  },
+  {
+    "position_id": "POS-ASSET-OWNER",
+    "job_title": "Asset Owner",
+    "job_family": "Asset Management",
+    "risk_category": "LOW",
+    "status": "ACTIVE"
+  },
+  {
+    "position_id": "POS-SEC-ADMIN",
+    "job_title": "Security Administrator",
+    "job_family": "Security Engineering",
+    "risk_category": "CRITICAL",
+    "status": "ACTIVE"
+  },
+  {
+    "position_id": "POS-CONTRACTOR-SUPPORT",
+    "job_title": "Contractor Support Analyst",
+    "job_family": "Operations Support",
+    "risk_category": "HIGH",
+    "status": "ACTIVE"
+  }
+]
