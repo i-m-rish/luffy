@@ -1,0 +1,42 @@
+[
+  {
+    "assignment_id": "IGA-ASN-JDBC-1",
+    "account_id": "IGA-ACC-JDBC-1",
+    "entitlement_id": "IGA-ENT-JDBC-ASSET-VIEWER",
+    "assignment_status": "ACTIVE",
+    "assigned_by": "APP_OWNER",
+    "assigned_at": "2026-01-10T10:00:00Z"
+  },
+  {
+    "assignment_id": "IGA-ASN-JDBC-2",
+    "account_id": "IGA-ACC-JDBC-2",
+    "entitlement_id": "IGA-ENT-JDBC-COMPLIANCE-REVIEWER",
+    "assignment_status": "ACTIVE",
+    "assigned_by": "APP_OWNER",
+    "assigned_at": "2026-01-10T10:05:00Z"
+  },
+  {
+    "assignment_id": "IGA-ASN-JDBC-3",
+    "account_id": "IGA-ACC-JDBC-3",
+    "entitlement_id": "IGA-ENT-JDBC-ASSET-OWNER",
+    "assignment_status": "ACTIVE",
+    "assigned_by": "APP_OWNER",
+    "assigned_at": "2026-01-10T10:10:00Z"
+  },
+  {
+    "assignment_id": "IGA-ASN-JDBC-4",
+    "account_id": "IGA-ACC-JDBC-4",
+    "entitlement_id": "IGA-ENT-JDBC-SYSTEM-ADMINISTRATOR",
+    "assignment_status": "ACTIVE",
+    "assigned_by": "SECURITY_ADMIN",
+    "assigned_at": "2026-01-10T10:15:00Z"
+  },
+  {
+    "assignment_id": "IGA-ASN-JDBC-5",
+    "account_id": "IGA-ACC-JDBC-5",
+    "entitlement_id": "IGA-ENT-JDBC-REMEDIATION-MANAGER",
+    "assignment_status": "ACTIVE",
+    "assigned_by": "UNKNOWN",
+    "assigned_at": "2026-01-10T10:20:00Z"
+  }
+]
