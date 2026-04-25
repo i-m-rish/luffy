@@ -48,5 +48,35 @@
     "email": "orphan.account@example.com",
     "account_status": "ACTIVE",
     "correlation_status": "ORPHAN"
+  },
+  {
+    "account_id": "IGA-ACC-ZSP-ADMIN",
+    "application_id": "zsp-jit-app",
+    "native_account_id": "admin",
+    "employee_id": "1001",
+    "lan_id": "RSINGH01",
+    "email": "iga.admin@example.com",
+    "account_status": "ACTIVE",
+    "correlation_status": "MATCHED"
+  },
+  {
+    "account_id": "IGA-ACC-ZSP-REVIEWER",
+    "application_id": "zsp-jit-app",
+    "native_account_id": "reviewer",
+    "employee_id": "1002",
+    "lan_id": "AKUMAR01",
+    "email": "access.reviewer@example.com",
+    "account_status": "ACTIVE",
+    "correlation_status": "MATCHED"
+  },
+  {
+    "account_id": "IGA-ACC-ZSP-READER",
+    "application_id": "zsp-jit-app",
+    "native_account_id": "reader",
+    "employee_id": "1003",
+    "lan_id": "NSHARMA01",
+    "email": "read.only@example.com",
+    "account_status": "ACTIVE",
+    "correlation_status": "MATCHED"
   }
 ]
