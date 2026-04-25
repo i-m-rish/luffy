@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 
 from services.governance_service import governance_service
-from ui.components import badge, callout, metric_card, page_shell, table
+from ui.components import action_tile, badge, callout, metric_card, page_shell, table
 
 router = APIRouter(tags=["IGA UI"])
 
@@ -26,7 +26,7 @@ def render_application_summary_table() -> str:
             "</tr>"
         )
     return table(
-        ["ID", "Name", "Pattern", "Risk", "Accounts", "Entitlements", "Assignments", "Critical Entitlements"],
+        ["Source ID", "Source Name", "Connector", "Risk", "Accounts", "Entitlements", "Assignments", "Privileged Entitlements"],
         rows,
     )
 
@@ -36,36 +36,46 @@ def ui_dashboard() -> HTMLResponse:
     data = governance_service.dashboard()
     top_risks = [risk for risk in data["top_risks"] if risk]
     cards = {
-        "Applications": data["application_count"],
+        "Sources": data["application_count"],
         "Identities": data["identity_count"],
         "Accounts": data["account_count"],
         "Active Accounts": data["active_account_count"],
-        "Assignments": data["assignment_count"],
+        "Access Assignments": data["assignment_count"],
         "Correlation Coverage": f"{data['correlation_coverage_percent']}%",
         "Orphan Accounts": data["orphan_account_count"],
         "High-Risk Access": data["high_risk_access_count"],
-        "Critical Entitlements": data["critical_entitlement_count"],
+        "Privileged Entitlements": data["critical_entitlement_count"],
         "Terminated Identities": data["terminated_identity_count"],
     }
     card_html = "".join(metric_card(label, value) for label, value in cards.items())
+    tiles = "".join(
+        [
+            action_tile("Identity Warehouse", "Search governed identities and open access profiles.", "/ui/identities"),
+            action_tile("Sources", "Review onboarded applications, connector style, and risk.", "/ui/applications"),
+            action_tile("Access Reviews", "Certification-style review queue and campaign status.", "/ui/access-reviews"),
+            action_tile("Policy Violations", "SOD, orphan, leaver, and privileged access findings.", "/ui/policy-violations"),
+        ]
+    )
     body = f"""
       <section class="grid">{card_html}</section>
       {callout("Governance focus", top_risks)}
-      <h2 class="section-title">Application access summary</h2>
+      <h2 class="section-title">Quick actions</h2>
+      <section class="tile-grid">{tiles}</section>
+      <h2 class="section-title">Source access summary</h2>
       {render_application_summary_table()}
     """
     return HTMLResponse(
         page_shell(
-            "Luffy IGA Dashboard",
+            "Luffy Identity Security Console",
             body,
-            "Governance visibility over identities, accounts, entitlements, risk, and correlation.",
+            "SailPoint-style governance cockpit for identities, sources, accounts, entitlements, access reviews, and risk.",
         )
     )
 
 
 @router.get("/ui/applications", response_class=HTMLResponse)
 def ui_applications() -> HTMLResponse:
-    return HTMLResponse(page_shell("IGA Applications", render_application_summary_table()))
+    return HTMLResponse(page_shell("Sources", render_application_summary_table(), "Applications onboarded into governance."))
 
 
 @router.get("/ui/identities", response_class=HTMLResponse)
@@ -86,10 +96,10 @@ def ui_identities() -> HTMLResponse:
             "</tr>"
         )
     body = table(
-        ["ID", "Name", "Employee ID", "LAN ID", "Status", "Accounts", "Assignments", "High Risk"],
+        ["Identity", "Name", "Employee ID", "Login", "Lifecycle", "Accounts", "Access Items", "High Risk"],
         rows,
     )
-    return HTMLResponse(page_shell("IGA Identities", body))
+    return HTMLResponse(page_shell("Identity Warehouse", body, "Governed people and their access footprint."))
 
 
 @router.get("/ui/identity/{identity_id}/access", response_class=HTMLResponse)
@@ -123,10 +133,10 @@ def ui_identity_access(identity_id: str) -> HTMLResponse:
     body = f"""
       <div class="card"><strong>{identity['display_name']}</strong><br />
       <span class="muted">{identity['identity_id']} · {identity['lan_id']} · {identity['identity_status']}</span></div>
-      <h2 class="section-title">Access</h2>
-      {table(["Application", "Account", "Entitlement", "Risk", "Assigned By", "Assigned At"], rows)}
+      <h2 class="section-title">Access Profile</h2>
+      {table(["Source", "Account", "Entitlement", "Risk", "Granted By", "Granted At"], rows)}
     """
-    return HTMLResponse(page_shell("IGA Identity Access", body))
+    return HTMLResponse(page_shell("Identity Access Profile", body))
 
 
 @router.get("/ui/accounts", response_class=HTMLResponse)
@@ -145,7 +155,7 @@ def ui_accounts() -> HTMLResponse:
             f"<td>{badge(correlation_status, 'status-' + correlation_status)}</td>"
             "</tr>"
         )
-    return HTMLResponse(page_shell("IGA Accounts", table(["ID", "Application", "LAN ID", "Email", "Status", "Correlation"], rows)))
+    return HTMLResponse(page_shell("Accounts", table(["Account", "Source", "Login", "Email", "Status", "Correlation"], rows)))
 
 
 @router.get("/ui/entitlements", response_class=HTMLResponse)
@@ -162,7 +172,7 @@ def ui_entitlements() -> HTMLResponse:
             f"<td>{badge(risk, 'risk-' + risk)}</td>"
             "</tr>"
         )
-    return HTMLResponse(page_shell("IGA Entitlements", table(["ID", "Application", "Name", "Description", "Risk"], rows)))
+    return HTMLResponse(page_shell("Entitlement Catalog", table(["Entitlement", "Source", "Display Name", "Description", "Risk"], rows)))
 
 
 @router.get("/ui/correlation-results", response_class=HTMLResponse)
@@ -181,8 +191,30 @@ def ui_correlation_results() -> HTMLResponse:
             f"<td>{result['reason']}</td>"
             "</tr>"
         )
-    body = table(["ID", "Account", "Identity", "Result", "Match Attribute", "Confidence", "Reason"], rows)
-    return HTMLResponse(page_shell("IGA Correlation Results", body))
+    body = table(["Run ID", "Account", "Identity", "Result", "Match Attribute", "Confidence", "Reason"], rows)
+    return HTMLResponse(page_shell("Correlation Results", body, "Account-to-identity matching results."))
+
+
+@router.get("/ui/access-reviews", response_class=HTMLResponse)
+def ui_access_reviews() -> HTMLResponse:
+    rows = [
+        "<tr><td>Quarterly JDBC Access Review</td><td>Security Asset Operations</td><td>Draft</td><td>5 access items</td><td>App Owner</td></tr>",
+        "<tr><td>Privileged Access Review</td><td>All Critical Entitlements</td><td>Design</td><td>1 privileged item</td><td>Security Admin</td></tr>",
+        "<tr><td>Orphan Account Review</td><td>Uncorrelated Accounts</td><td>Action Required</td><td>1 orphan account</td><td>IGA Admin</td></tr>",
+    ]
+    body = table(["Campaign", "Scope", "Status", "Items", "Reviewer"], rows)
+    return HTMLResponse(page_shell("Access Reviews", body, "Certification-style access review queue."))
+
+
+@router.get("/ui/policy-violations", response_class=HTMLResponse)
+def ui_policy_violations() -> HTMLResponse:
+    rows = [
+        "<tr><td>ORPHAN_ACCOUNT</td><td>ORPHAN01 has no correlated identity.</td><td>High</td><td>Open</td></tr>",
+        "<tr><td>HIGH_RISK_ACCESS</td><td>System Administrator entitlement exists and needs certification.</td><td>Critical</td><td>Open</td></tr>",
+        "<tr><td>LEAVER_GOVERNANCE</td><td>Terminated identity exists for leaver testing.</td><td>Medium</td><td>Monitor</td></tr>",
+    ]
+    body = table(["Policy", "Finding", "Severity", "Status"], rows)
+    return HTMLResponse(page_shell("Policy Violations", body, "SOD, orphan, leaver, and privileged access findings."))
 
 
 @router.get("/ui/orphan-accounts", response_class=HTMLResponse)
@@ -201,7 +233,7 @@ def ui_orphan_accounts() -> HTMLResponse:
             f"<td>{correlation['reason']}</td>"
             "</tr>"
         )
-    return HTMLResponse(page_shell("IGA Orphan Accounts", table(["Account", "Application", "LAN ID", "Email", "Reason"], rows)))
+    return HTMLResponse(page_shell("Orphan Accounts", table(["Account", "Source", "Login", "Email", "Reason"], rows)))
 
 
 @router.get("/ui/high-risk-access", response_class=HTMLResponse)
@@ -222,4 +254,4 @@ def ui_high_risk_access() -> HTMLResponse:
             f"<td>{assignment['assigned_by']}</td>"
             "</tr>"
         )
-    return HTMLResponse(page_shell("IGA High-Risk Access", table(["LAN ID", "Application", "Entitlement", "Risk", "Assigned By"], rows)))
+    return HTMLResponse(page_shell("High-Risk Access", table(["Identity Login", "Source", "Entitlement", "Risk", "Granted By"], rows)))
