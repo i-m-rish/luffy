@@ -1,0 +1,52 @@
+[
+  {
+    "account_id": "IGA-ACC-JDBC-1",
+    "application_id": "jdbc-target",
+    "native_account_id": "1",
+    "employee_id": "1001",
+    "lan_id": "RSINGH01",
+    "email": "rishabh.singh@example.com",
+    "account_status": "ACTIVE",
+    "correlation_status": "MATCHED"
+  },
+  {
+    "account_id": "IGA-ACC-JDBC-2",
+    "application_id": "jdbc-target",
+    "native_account_id": "2",
+    "employee_id": "1002",
+    "lan_id": "AKUMAR01",
+    "email": "amit.kumar@example.com",
+    "account_status": "ACTIVE",
+    "correlation_status": "MATCHED"
+  },
+  {
+    "account_id": "IGA-ACC-JDBC-3",
+    "application_id": "jdbc-target",
+    "native_account_id": "3",
+    "employee_id": "1003",
+    "lan_id": "NSHARMA01",
+    "email": "neha.sharma@example.com",
+    "account_status": "ACTIVE",
+    "correlation_status": "MATCHED"
+  },
+  {
+    "account_id": "IGA-ACC-JDBC-4",
+    "application_id": "jdbc-target",
+    "native_account_id": "4",
+    "employee_id": "1004",
+    "lan_id": "PKAPOOR01",
+    "email": "priya.kapoor@example.com",
+    "account_status": "ACTIVE",
+    "correlation_status": "MATCHED"
+  },
+  {
+    "account_id": "IGA-ACC-JDBC-5",
+    "application_id": "jdbc-target",
+    "native_account_id": "5",
+    "employee_id": "9001",
+    "lan_id": "ORPHAN01",
+    "email": "orphan.account@example.com",
+    "account_status": "ACTIVE",
+    "correlation_status": "ORPHAN"
+  }
+]
