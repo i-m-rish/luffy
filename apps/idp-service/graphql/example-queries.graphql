@@ -1,0 +1,44 @@
+query GetIdentityWithGroups($identityId: ID!) {
+  identity(identityId: $identityId) {
+    identityId
+    employeeId
+    lanId
+    email
+    displayName
+    identityStatus
+    groups {
+      groupId
+      groupName
+      groupType
+      riskLevel
+    }
+  }
+}
+
+query GetApplicationLoginGroups($appId: String!) {
+  applicationRegistration(appId: $appId) {
+    appRegistrationId
+    appId
+    appName
+    authProtocol
+    ssoEnabled
+    assignedGroups {
+      groupId
+      groupName
+      riskLevel
+    }
+  }
+}
+
+query GetHighRiskMachineIdentities {
+  machineIdentities(riskLevel: HIGH) {
+    machineIdentityId
+    name
+    type
+    owner
+    usedByService
+    riskLevel
+    status
+    rotationStatus
+  }
+}
