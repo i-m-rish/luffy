@@ -22,7 +22,7 @@ Simple flow:
 ```mermaid
 flowchart LR
     HRMS[hrms-service] -->|worker attributes| IDP[idp-service]
-    IDP -->|identities / groups / app registrations| IGA[iga-service later]
+    IDP -->|identities / groups / app registrations / NHI| IGA[iga-service]
     IDP -->|auth events later| SIEM[siem-detection-service later]
 ```
 
@@ -51,14 +51,14 @@ Which OAuth clients/service principals are in use?
 
 ```text
 Integration type: IdP source
-Primary API style: GraphQL for identity relationship queries
-Secondary API style: REST login/token simulation later
+Primary API style now: FastAPI read-only REST API
+UI style now: simple browser UI rendered by FastAPI
+Future API style: GraphQL for identity relationship queries
 Downstream system: iga-service
-UI in milestone 1: No full UI; minimal admin UI later
 Primary implementation language: Python
 ```
 
-## Why GraphQL here
+## Why GraphQL later
 
 IdP data is relationship-heavy:
 
@@ -96,9 +96,13 @@ apps/idp-service/
 │   ├── schema.graphql
 │   └── example-queries.graphql
 ├── scripts/
-│   └── validate_data.py
+│   └── validate_idp_data.py
+├── src/
+│   ├── repository.py
+│   └── fastapi_app.py
 └── tests/
-    └── test_idp_data.py
+    ├── test_idp_data.py
+    └── test_idp_fastapi.py
 ```
 
 ## Validate sample data
@@ -106,20 +110,7 @@ apps/idp-service/
 From the repository root:
 
 ```bash
-cd apps/idp-service
-python scripts/validate_data.py
-```
-
-The validator checks:
-
-```text
-required fields
-unique identity IDs, employee IDs, LAN IDs, and emails
-valid group types and risk levels
-valid group membership references
-valid app registration auth protocols
-valid app assignment references
-valid machine identity ownership, risk, status, and rotation state
+python apps/idp-service/scripts/validate_idp_data.py
 ```
 
 ## Run tests
@@ -127,26 +118,74 @@ valid machine identity ownership, risk, status, and rotation state
 From the repository root:
 
 ```bash
-python -m pytest apps/idp-service/tests
+python -m pytest apps/idp-service/tests -q
 ```
 
-The tests verify:
+## Install FastAPI runtime locally
+
+```bash
+python -m pip install fastapi uvicorn httpx
+```
+
+## Run FastAPI app
+
+From the repository root:
+
+```bash
+cd apps/idp-service/src
+uvicorn fastapi_app:app --reload --port 8002
+```
+
+The app runs at:
 
 ```text
-sample data validation passes
-expected counts are present
-disabled identity exists for leaver scenario
-critical admin group exists
-memberships reference valid identities and groups
-app assignments reference valid apps and groups
-JDBC target is represented as non-SSO app
-OIDC and SAML app registration examples exist
-machine identity overdue rotation exists for risk testing
-GraphQL schema and example queries exist
+http://127.0.0.1:8002
+```
+
+Browser UI:
+
+```text
+http://127.0.0.1:8002/ui
+```
+
+Interactive API docs:
+
+```text
+http://127.0.0.1:8002/docs
+```
+
+## Browser UI pages
+
+```text
+/ui
+/ui/identities
+/ui/groups
+/ui/app-registrations
+/ui/machine-identities
+```
+
+## Read-only API endpoints
+
+```text
+GET /health
+GET /dashboard
+GET /identities
+GET /groups
+GET /group-memberships
+GET /app-registrations
+GET /app-assignments
+GET /machine-identities
+GET /identity/{identity_id}/profile
+```
+
+Example:
+
+```text
+GET /identity/IDP-1004/profile
 ```
 
 ## Milestone 1 scope
 
-Milestone 1 focuses on design, sample data, GraphQL schema, and validation.
+Milestone 1 now includes design, sample data, validation, FastAPI read-only API, and a simple browser UI.
 
 No real identities, no real tokens, no real secrets, and no production SSO integration.
