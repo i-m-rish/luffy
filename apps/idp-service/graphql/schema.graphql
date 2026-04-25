@@ -1,0 +1,141 @@
+enum IdentityType {
+  HUMAN
+  MACHINE
+}
+
+enum IdentityStatus {
+  ACTIVE
+  DISABLED
+  TERMINATED
+  STAGED
+}
+
+enum GroupType {
+  SECURITY
+  APP_ACCESS
+  ADMIN
+  SYSTEM
+}
+
+enum AuthProtocol {
+  OIDC
+  SAML
+  API_CLIENT_CREDENTIALS
+  NONE
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+enum MembershipStatus {
+  ACTIVE
+  REMOVED
+}
+
+enum MachineIdentityType {
+  SERVICE_ACCOUNT
+  OAUTH_CLIENT
+  SERVICE_PRINCIPAL
+  CERTIFICATE_IDENTITY
+  DESKTOP_AGENT
+}
+
+enum MachineIdentityStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+  ORPHANED
+}
+
+enum RotationStatus {
+  CURRENT
+  DUE_SOON
+  OVERDUE
+  NOT_APPLICABLE
+}
+
+type Identity {
+  identityId: ID!
+  employeeId: String
+  lanId: String!
+  email: String!
+  displayName: String!
+  identityType: IdentityType!
+  identityStatus: IdentityStatus!
+  sourceSystem: String!
+  groups: [Group!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Group {
+  groupId: ID!
+  groupName: String!
+  groupType: GroupType!
+  description: String!
+  riskLevel: RiskLevel!
+  status: Status!
+  members: [Identity!]!
+  appAssignments: [ApplicationRegistration!]!
+}
+
+type GroupMembership {
+  membershipId: ID!
+  identity: Identity!
+  group: Group!
+  membershipStatus: MembershipStatus!
+  assignedBy: String!
+  assignedAt: String!
+}
+
+type ApplicationRegistration {
+  appRegistrationId: ID!
+  appId: String!
+  appName: String!
+  authProtocol: AuthProtocol!
+  ssoEnabled: Boolean!
+  tokenAudience: String
+  status: Status!
+  assignedGroups: [Group!]!
+}
+
+type AppAssignment {
+  appAssignmentId: ID!
+  applicationRegistration: ApplicationRegistration!
+  group: Group!
+  assignmentStatus: MembershipStatus!
+  assignedAt: String!
+}
+
+type MachineIdentity {
+  machineIdentityId: ID!
+  name: String!
+  type: MachineIdentityType!
+  owner: String!
+  usedByService: String!
+  riskLevel: RiskLevel!
+  status: MachineIdentityStatus!
+  rotationStatus: RotationStatus!
+  lastUsedAt: String
+}
+
+type Query {
+  identity(identityId: ID!): Identity
+  identityByEmployeeId(employeeId: String!): Identity
+  identities(status: IdentityStatus): [Identity!]!
+  group(groupId: ID!): Group
+  groups(groupType: GroupType): [Group!]!
+  applicationRegistration(appId: String!): ApplicationRegistration
+  applicationRegistrations(status: Status): [ApplicationRegistration!]!
+  machineIdentity(machineIdentityId: ID!): MachineIdentity
+  machineIdentities(riskLevel: RiskLevel): [MachineIdentity!]!
+}
