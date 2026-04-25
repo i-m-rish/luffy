@@ -51,7 +51,8 @@ Can access be reviewed/certified later?
 
 ```text
 Integration type: IGA/governance platform
-Primary API style now: standard-library read-only HTTP API
+Primary API style now: FastAPI read-only REST API
+Fallback API style: standard-library read-only HTTP API
 Primary API style later: GraphQL for governance relationship queries
 Data style in milestone 1: normalized JSON
 UI in milestone 1: design only; governance UI later
@@ -98,10 +99,12 @@ apps/iga-service/
 │   └── validate_iga_data.py
 ├── src/
 │   ├── repository.py
+│   ├── fastapi_app.py
 │   └── server.py
 └── tests/
     ├── test_iga_data.py
-    └── test_iga_api.py
+    ├── test_iga_api.py
+    └── test_iga_fastapi.py
 ```
 
 ## Validate data
@@ -120,19 +123,46 @@ From the repository root:
 python -m pytest apps/iga-service/tests -q
 ```
 
-## Run local read-only API
+## Install FastAPI runtime locally
+
+```bash
+python -m pip install fastapi uvicorn httpx
+```
+
+## Run FastAPI read-only API
 
 From the repository root:
 
 ```bash
 cd apps/iga-service/src
-python server.py
+uvicorn fastapi_app:app --reload --port 8001
 ```
 
 The API runs at:
 
 ```text
 http://127.0.0.1:8001
+```
+
+Interactive API docs:
+
+```text
+http://127.0.0.1:8001/docs
+```
+
+OpenAPI schema:
+
+```text
+http://127.0.0.1:8001/openapi.json
+```
+
+## Fallback standard-library API
+
+If FastAPI dependencies are not installed, use:
+
+```bash
+cd apps/iga-service/src
+python server.py
 ```
 
 ## Read-only API endpoints
