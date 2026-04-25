@@ -173,6 +173,7 @@ Agents explain risks, suggest reviews, summarize onboarding gaps, and recommend 
 ## Documentation
 
 - [Architecture](docs/architecture.md)
+- [Mermaid Diagrams](docs/diagrams.md)
 - [Naming Standards](docs/naming-standards.md)
 - [Secure by Design and Responsible AI Guardrails](docs/secure-by-design-and-responsible-ai.md)
 - [API and Authentication Standards](docs/api-authentication-standards.md)
