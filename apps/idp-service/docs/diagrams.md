@@ -86,21 +86,44 @@ erDiagram
     }
 ```
 
-## 3. HRMS to IdP Identity Flow
+## 3. IdP to IGA Normalization Flow
+
+```mermaid
+flowchart LR
+    IDENTITIES[identities.json]
+    GROUPS[groups.json]
+    MEMBERSHIPS[group-memberships.json]
+    APPREG[app-registrations.json]
+    APPASN[app-assignments.json]
+    NHI[machine-identities.json]
+
+    IGA_IDS[iga-service<br/>identities-normalized.json]
+    IGA_APPS[iga-service<br/>application-catalog.json]
+    IGA_FUTURE[future IGA access / NHI governance]
+
+    IDENTITIES -->|digital identities| IGA_IDS
+    GROUPS -->|group access context later| IGA_FUTURE
+    MEMBERSHIPS -->|identity-group relationships later| IGA_FUTURE
+    APPREG -->|application registration context| IGA_APPS
+    APPASN -->|login assignment context later| IGA_FUTURE
+    NHI -->|machine identity governance later| IGA_FUTURE
+```
+
+## 4. HRMS to IdP Identity Flow
 
 ```mermaid
 sequenceDiagram
     participant HRMS as hrms-service
     participant IDP as idp-service
-    participant IGA as iga-service later
+    participant IGA as iga-service
 
     HRMS->>IDP: Send worker attributes later
     IDP->>IDP: Create or update digital identity
     IDP->>IDP: Assign baseline groups
-    IDP->>IGA: Expose identity and group data for aggregation
+    IDP->>IGA: Expose identity, group, app registration, and NHI data
 ```
 
-## 4. App Registration vs IGA Onboarding
+## 5. App Registration vs IGA Onboarding
 
 ```mermaid
 flowchart TD
@@ -120,7 +143,7 @@ flowchart TD
     IGACAT --> REVOKE[Can access be revoked/certified?]
 ```
 
-## 5. Machine Identity Governance Flow
+## 6. Machine Identity Governance Flow
 
 ```mermaid
 flowchart LR
@@ -129,22 +152,26 @@ flowchart LR
     APP[used by service/app]
     RISK[risk level]
     ROTATION[rotation status]
-    IGA[iga-service later]
+    IGA[iga-service]
 
     NHI --> OWNER
     NHI --> APP
     NHI --> RISK
     NHI --> ROTATION
     NHI --> IGA
+
+    IGA --> FUTURE_REVIEW[future NHI access review]
+    IGA --> FUTURE_ROTATION[future rotation risk finding]
 ```
 
-## 6. Future GraphQL Query Flow
+## 7. Future GraphQL Query Flow
 
 ```mermaid
 sequenceDiagram
     participant Client as GraphQL Client
     participant IDP as idp-service GraphQL
     participant Store as IdP Data Store
+    participant IGA as iga-service later
 
     Client->>IDP: Query identity with groups and app assignments
     IDP->>IDP: Authenticate caller later
@@ -152,4 +179,5 @@ sequenceDiagram
     IDP->>Store: Fetch identity relationships
     Store-->>IDP: Return identities/groups/apps
     IDP-->>Client: Return authorized fields only
+    IGA->>IDP: Aggregate governed IdP data later
 ```
