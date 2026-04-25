@@ -14,12 +14,12 @@ def test_iga_sample_data_validation_passes() -> None:
     counts = validate_all()
 
     assert counts == {
-        "applications": 8,
+        "applications": 10,
         "identities": 6,
-        "accounts": 5,
-        "entitlements": 5,
-        "assignments": 5,
-        "correlation_results": 5,
+        "accounts": 8,
+        "entitlements": 10,
+        "assignments": 9,
+        "correlation_results": 8,
     }
 
 
@@ -29,7 +29,9 @@ def test_application_catalog_contains_required_foundation_apps() -> None:
 
     assert "hrms-service" in application_ids
     assert "idp-service" in application_ids
+    assert "iga-service" in application_ids
     assert "jdbc-target" in application_ids
+    assert "zsp-jit-app" in application_ids
     assert "pam-target" in application_ids
     assert "api-security-gateway" in application_ids
 
@@ -52,14 +54,17 @@ def test_iga_has_correlation_result_for_every_account() -> None:
     assert account_ids == correlated_account_ids
 
 
-def test_iga_has_critical_entitlement_for_risk_testing() -> None:
+def test_iga_has_critical_entitlements_for_risk_testing() -> None:
     entitlements = load_json("entitlements-normalized.json")
     critical_entitlements = [
         entitlement for entitlement in entitlements if entitlement["risk_level"] == "CRITICAL"
     ]
+    critical_names = {entitlement["entitlement_name"] for entitlement in critical_entitlements}
 
-    assert len(critical_entitlements) == 1
-    assert critical_entitlements[0]["entitlement_name"] == "System Administrator"
+    assert len(critical_entitlements) == 3
+    assert "System Administrator" in critical_names
+    assert "ZSP Administrator" in critical_names
+    assert "Temporary Session Administrator" in critical_names
 
 
 def test_assignment_references_are_valid() -> None:
