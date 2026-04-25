@@ -35,9 +35,12 @@ def test_identity_access_returns_accounts_and_assignments() -> None:
 
     assert result is not None
     assert result["identity"]["employee_id"] == "1001"
-    assert len(result["accounts"]) == 1
-    assert result["accounts"][0]["account"]["lan_id"] == "RSINGH01"
-    assert result["accounts"][0]["assignments"]
+    assert len(result["accounts"]) == 2
+    account_logins = {account_view["account"]["lan_id"] for account_view in result["accounts"]}
+    application_ids = {account_view["account"]["application_id"] for account_view in result["accounts"]}
+    assert "RSINGH01" in account_logins
+    assert {"jdbc-target", "zsp-jit-app"}.issubset(application_ids)
+    assert all(account_view["assignments"] for account_view in result["accounts"])
 
 
 def test_identity_access_returns_none_for_unknown_identity() -> None:
@@ -62,3 +65,5 @@ def test_high_risk_access_endpoint_data() -> None:
 
     assert "Remediation Manager" in entitlement_names
     assert "System Administrator" in entitlement_names
+    assert "ZSP Administrator" in entitlement_names
+    assert "Temporary Session Administrator" in entitlement_names
