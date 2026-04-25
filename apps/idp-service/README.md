@@ -9,10 +9,12 @@ It owns digital identity, groups, app registrations, authentication metadata, an
 Simple mapping:
 
 ```text
-identities        -> digital users
-groups            -> login/access groups
-app_registrations -> SSO/OIDC/SAML/API clients
-machine_identities -> service accounts, OAuth clients, service principals
+identities          -> digital users
+groups              -> login/access groups
+group_memberships   -> who is in which group
+app_registrations   -> SSO/OIDC/SAML/API clients
+app_assignments     -> which group grants login to which app
+machine_identities  -> service accounts, OAuth clients, service principals
 ```
 
 Simple flow:
@@ -94,7 +96,53 @@ apps/idp-service/
 │   ├── schema.graphql
 │   └── example-queries.graphql
 ├── scripts/
+│   └── validate_data.py
 └── tests/
+    └── test_idp_data.py
+```
+
+## Validate sample data
+
+From the repository root:
+
+```bash
+cd apps/idp-service
+python scripts/validate_data.py
+```
+
+The validator checks:
+
+```text
+required fields
+unique identity IDs, employee IDs, LAN IDs, and emails
+valid group types and risk levels
+valid group membership references
+valid app registration auth protocols
+valid app assignment references
+valid machine identity ownership, risk, status, and rotation state
+```
+
+## Run tests
+
+From the repository root:
+
+```bash
+python -m pytest apps/idp-service/tests
+```
+
+The tests verify:
+
+```text
+sample data validation passes
+expected counts are present
+disabled identity exists for leaver scenario
+critical admin group exists
+memberships reference valid identities and groups
+app assignments reference valid apps and groups
+JDBC target is represented as non-SSO app
+OIDC and SAML app registration examples exist
+machine identity overdue rotation exists for risk testing
+GraphQL schema and example queries exist
 ```
 
 ## Milestone 1 scope
