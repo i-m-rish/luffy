@@ -7,18 +7,43 @@ This document contains Mermaid diagrams specific to `iga-service`.
 ```mermaid
 flowchart LR
     HRMS[hrms-service<br/>worker lifecycle]
-    IDP[idp-service<br/>digital identities / groups / app registrations]
+    IDP[idp-service<br/>digital identities / groups / app registrations / NHI]
     JDBC[jdbc-target<br/>accounts / entitlements / assignments]
     IGA[iga-service<br/>governance model]
     SIEM[siem-detection-service<br/>audit/finding events later]
 
-    HRMS --> IGA
-    IDP --> IGA
-    JDBC --> IGA
-    IGA --> SIEM
+    HRMS -->|employment truth| IGA
+    IDP -->|digital identity truth| IGA
+    JDBC -->|target access truth| IGA
+    IGA -->|future governance findings| SIEM
 ```
 
-## 2. IGA Normalized Entity Relationship Diagram
+## 2. Source-to-Normalized Data Mapping
+
+```mermaid
+flowchart LR
+    HRMS[hrms-service data<br/>workers / lifecycle events]
+    IDP[idp-service data<br/>identities / groups / apps / NHI]
+    JDBC[jdbc-target data<br/>IAM-safe views]
+
+    APPCAT[application-catalog.json]
+    IDS[identities-normalized.json]
+    ACC[accounts-normalized.json]
+    ENTS[entitlements-normalized.json]
+    ASN[assignments-normalized.json]
+    CORR[correlation-results.json]
+
+    HRMS --> IDS
+    IDP --> IDS
+    IDP --> APPCAT
+    JDBC --> ACC
+    JDBC --> ENTS
+    JDBC --> ASN
+    ACC --> CORR
+    IDS --> CORR
+```
+
+## 3. IGA Normalized Entity Relationship Diagram
 
 ```mermaid
 erDiagram
@@ -92,7 +117,7 @@ erDiagram
     }
 ```
 
-## 3. Aggregation and Correlation Flow
+## 4. Aggregation and Correlation Flow
 
 ```mermaid
 sequenceDiagram
@@ -101,16 +126,17 @@ sequenceDiagram
     participant JDBC as jdbc-target
     participant IGA as iga-service
 
-    HRMS->>IGA: Provide worker/identity context
-    IDP->>IGA: Provide digital identities and groups
+    HRMS->>IGA: Provide worker and lifecycle context
+    IDP->>IGA: Provide digital identities, groups, apps, NHI
     JDBC->>IGA: Provide accounts, entitlements, assignments
-    IGA->>IGA: Normalize identities
-    IGA->>IGA: Normalize accounts and entitlements
+    IGA->>IGA: Normalize applications and identities
+    IGA->>IGA: Normalize accounts, entitlements, assignments
     IGA->>IGA: Correlate account using employee_id, lan_id, email
     IGA->>IGA: Mark matched, partial, or orphan accounts
+    IGA->>IGA: Flag critical entitlements and orphan accounts
 ```
 
-## 4. Correlation Decision Logic
+## 5. Correlation Decision Logic
 
 ```mermaid
 flowchart TD
@@ -132,7 +158,7 @@ flowchart TD
     EMAIL -->|no| ORPHAN
 ```
 
-## 5. Governance Relationship View
+## 6. Governance Relationship View
 
 ```mermaid
 flowchart LR
@@ -142,15 +168,40 @@ flowchart LR
     ENTITLEMENT[Entitlement]
     APP[Application]
     RISK[Risk Level]
+    CORR[Correlation Result]
 
     IDENTITY --> ACCOUNT
+    ACCOUNT --> CORR
     ACCOUNT --> ASSIGNMENT
     ASSIGNMENT --> ENTITLEMENT
     ENTITLEMENT --> APP
     ENTITLEMENT --> RISK
 ```
 
-## 6. Future IGA UI Flow
+## 7. Governance Risk View
+
+```mermaid
+flowchart TD
+    DATA[Normalized IGA Data]
+    ORPHAN[Orphan accounts]
+    CRITICAL[Critical entitlements]
+    TERM[Terminated identities]
+    FUTURE[Future governance actions]
+
+    DATA --> ORPHAN
+    DATA --> CRITICAL
+    DATA --> TERM
+
+    ORPHAN --> FUTURE
+    CRITICAL --> FUTURE
+    TERM --> FUTURE
+
+    FUTURE --> REVIEW[access review / certification later]
+    FUTURE --> DEPROV[deprovisioning review later]
+    FUTURE --> APPROVAL[approval workflow later]
+```
+
+## 8. Future IGA UI Flow
 
 ```mermaid
 flowchart TD
@@ -160,6 +211,8 @@ flowchart TD
     ACCOUNTS[Accounts]
     ACCESS[Access / Assignments]
     CORR[Correlation Results]
+    ORPHANS[Orphan Accounts]
+    RISK[High-Risk Access]
     REVIEW[Access Review / Certification later]
     REQUEST[Access Request later]
 
@@ -168,6 +221,8 @@ flowchart TD
     UI --> ACCOUNTS
     UI --> ACCESS
     UI --> CORR
+    UI --> ORPHANS
+    UI --> RISK
     UI --> REVIEW
     UI --> REQUEST
 ```
