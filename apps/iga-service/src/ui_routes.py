@@ -29,10 +29,7 @@ def detail_card(title: str, rows: list[tuple[str, object]]) -> str:
 
 def integration_card(integration: dict[str, object] | None) -> str:
     if not integration:
-        return detail_card(
-            "Integration Method",
-            [("Status", "No integration metadata has been captured for this source yet.")],
-        )
+        return detail_card("Integration Method", [("Status", "No integration metadata has been captured for this source yet.")])
 
     return detail_card(
         "Integration Method",
@@ -52,7 +49,7 @@ def integration_card(integration: dict[str, object] | None) -> str:
 
 
 def render_application_summary_table() -> str:
-    rows = []
+    rows: list[str] = []
     for application in governance_service.application_access_summary():
         risk = str(application["risk_level"])
         app_id = str(application["application_id"])
@@ -141,7 +138,7 @@ def ui_application_detail(request: Request, application_id: str) -> Response:
 
     app = detail["application"]
     integration = detail.get("integration")
-    account_rows = []
+    account_rows: list[str] = []
     for view in detail["accounts"]:
         account = view["account"]
         identity = view["identity"]
@@ -149,7 +146,8 @@ def ui_application_detail(request: Request, application_id: str) -> Response:
         account_id = str(account["account_id"])
         identity_cell = "-"
         if identity:
-            identity_cell = object_link(identity["display_name"], f"/ui/identity/{identity['identity_id']}/access")
+            identity_id = str(identity["identity_id"])
+            identity_cell = object_link(identity["display_name"], f"/ui/identity/{identity_id}/access")
         account_rows.append(
             "<tr>"
             f"<td>{object_link(account_id, f'/ui/account/{account_id}')}</td>"
@@ -161,7 +159,7 @@ def ui_application_detail(request: Request, application_id: str) -> Response:
             "</tr>"
         )
 
-    entitlement_rows = []
+    entitlement_rows: list[str] = []
     for view in detail["entitlements"]:
         entitlement = view["entitlement"]
         entitlement_id = str(entitlement["entitlement_id"])
@@ -200,7 +198,7 @@ def ui_identities(request: Request) -> Response:
     redirect = enforce_ui(request, "VIEW_IDENTITIES")
     if redirect:
         return redirect
-    rows = []
+    rows: list[str] = []
     for identity in governance_service.identity_access_summary():
         status = str(identity["identity_status"])
         identity_id = str(identity["identity_id"])
@@ -231,19 +229,22 @@ def ui_identity_access(request: Request, identity_id: str) -> Response:
         return HTMLResponse(page_shell("Identity Not Found", f"<div class='card'>No identity found for {escape(identity_id)}</div>"), status_code=404)
 
     identity = access["identity"]
-    rows = []
+    rows: list[str] = []
     for account_view in access["accounts"]:
         account = account_view["account"]
         application = account_view["application"]
+        application_id = str(application["application_id"])
+        account_id = str(account["account_id"])
         for assignment_view in account_view["assignments"]:
             entitlement = assignment_view["entitlement"]
             assignment = assignment_view["assignment"]
+            entitlement_id = str(entitlement["entitlement_id"])
             risk = str(entitlement["risk_level"])
             rows.append(
                 "<tr>"
-                f"<td>{object_link(application['application_name'], f'/ui/application/{application['application_id']}')}</td>"
-                f"<td>{object_link(account['lan_id'], f'/ui/account/{account['account_id']}')}</td>"
-                f"<td>{object_link(entitlement['entitlement_name'], f'/ui/entitlement/{entitlement['entitlement_id']}')}</td>"
+                f"<td>{object_link(application['application_name'], f'/ui/application/{application_id}')}</td>"
+                f"<td>{object_link(account['lan_id'], f'/ui/account/{account_id}')}</td>"
+                f"<td>{object_link(entitlement['entitlement_name'], f'/ui/entitlement/{entitlement_id}')}</td>"
                 f"<td>{badge(risk, 'risk-' + risk)}</td>"
                 f"<td>{badge(assignment['assignment_status'], 'status-' + assignment['assignment_status'])}</td>"
                 f"<td>{escape(str(assignment['assigned_by']))}</td>"
@@ -271,7 +272,7 @@ def ui_accounts(request: Request) -> Response:
     redirect = enforce_ui(request, "VIEW_ACCOUNTS")
     if redirect:
         return redirect
-    rows = []
+    rows: list[str] = []
     for account in governance_service.accounts():
         account_status = str(account["account_status"])
         correlation_status = str(account["correlation_status"])
@@ -304,16 +305,23 @@ def ui_account_detail(request: Request, account_id: str) -> Response:
     identity = detail["identity"]
     correlation = detail["correlation"]
     integration = detail.get("integration")
-    source_cell = object_link(application["application_name"], f"/ui/application/{application['application_id']}") if application else escape(str(account["application_id"]))
-    identity_cell = object_link(identity["display_name"], f"/ui/identity/{identity['identity_id']}/access") if identity else "-"
-    assignment_rows = []
+    source_cell = escape(str(account["application_id"]))
+    if application:
+        source_app_id = str(application["application_id"])
+        source_cell = object_link(application["application_name"], f"/ui/application/{source_app_id}")
+    identity_cell = "-"
+    if identity:
+        identity_id = str(identity["identity_id"])
+        identity_cell = object_link(identity["display_name"], f"/ui/identity/{identity_id}/access")
+    assignment_rows: list[str] = []
     for view in detail["assignments"]:
         assignment = view["assignment"]
         entitlement = view["entitlement"]
+        entitlement_id = str(entitlement["entitlement_id"])
         risk = str(entitlement["risk_level"])
         assignment_rows.append(
             "<tr>"
-            f"<td>{object_link(entitlement['entitlement_name'], f'/ui/entitlement/{entitlement['entitlement_id']}')}</td>"
+            f"<td>{object_link(entitlement['entitlement_name'], f'/ui/entitlement/{entitlement_id}')}</td>"
             f"<td>{badge(risk, 'risk-' + risk)}</td>"
             f"<td>{badge(assignment['assignment_status'], 'status-' + assignment['assignment_status'])}</td>"
             f"<td>{escape(str(assignment['assigned_by']))}</td>"
@@ -344,7 +352,7 @@ def ui_entitlements(request: Request) -> Response:
     redirect = enforce_ui(request, "VIEW_ENTITLEMENTS")
     if redirect:
         return redirect
-    rows = []
+    rows: list[str] = []
     for entitlement in governance_service.entitlements():
         risk = str(entitlement["risk_level"])
         entitlement_id = str(entitlement["entitlement_id"])
@@ -374,14 +382,23 @@ def ui_entitlement_detail(request: Request, entitlement_id: str) -> Response:
     application = detail["application"]
     integration = detail.get("integration")
     risk = str(entitlement["risk_level"])
-    source_cell = object_link(application["application_name"], f"/ui/application/{application['application_id']}") if application else escape(str(entitlement["application_id"]))
-    assignment_rows = []
+    source_cell = escape(str(entitlement["application_id"]))
+    if application:
+        app_id = str(application["application_id"])
+        source_cell = object_link(application["application_name"], f"/ui/application/{app_id}")
+    assignment_rows: list[str] = []
     for view in detail["assignments"]:
         assignment = view["assignment"]
         account = view["account"]
         identity = view["identity"]
-        account_cell = object_link(account["lan_id"], f"/ui/account/{account['account_id']}") if account else "-"
-        identity_cell = object_link(identity["display_name"], f"/ui/identity/{identity['identity_id']}/access") if identity else "-"
+        account_cell = "-"
+        if account:
+            linked_account_id = str(account["account_id"])
+            account_cell = object_link(account["lan_id"], f"/ui/account/{linked_account_id}")
+        identity_cell = "-"
+        if identity:
+            linked_identity_id = str(identity["identity_id"])
+            identity_cell = object_link(identity["display_name"], f"/ui/identity/{linked_identity_id}/access")
         assignment_rows.append(
             "<tr>"
             f"<td>{account_cell}</td>"
@@ -413,7 +430,7 @@ def ui_correlation_results(request: Request) -> Response:
     redirect = enforce_ui(request, "VIEW_CORRELATION")
     if redirect:
         return redirect
-    rows = []
+    rows: list[str] = []
     for result in governance_service.correlation_results():
         status = str(result["result"])
         account_id = str(result["account_id"])
@@ -468,7 +485,7 @@ def ui_orphan_accounts(request: Request) -> Response:
     redirect = enforce_ui(request, "VIEW_ORPHANS")
     if redirect:
         return redirect
-    rows = []
+    rows: list[str] = []
     for item in governance_service.orphan_accounts():
         account = item["account"]
         application = item["application"]
@@ -492,18 +509,21 @@ def ui_high_risk_access(request: Request) -> Response:
     redirect = enforce_ui(request, "VIEW_HIGH_RISK")
     if redirect:
         return redirect
-    rows = []
+    rows: list[str] = []
     for item in governance_service.high_risk_access():
         account = item["account"]
         application = item["application"]
         entitlement = item["entitlement"]
         assignment = item["assignment"]
+        account_id = str(account["account_id"])
+        application_id = str(application["application_id"])
+        entitlement_id = str(entitlement["entitlement_id"])
         risk = str(entitlement["risk_level"])
         rows.append(
             "<tr>"
-            f"<td>{object_link(account['lan_id'], f'/ui/account/{account['account_id']}')}</td>"
-            f"<td>{object_link(application['application_name'], f'/ui/application/{application['application_id']}')}</td>"
-            f"<td>{object_link(entitlement['entitlement_name'], f'/ui/entitlement/{entitlement['entitlement_id']}')}</td>"
+            f"<td>{object_link(account['lan_id'], f'/ui/account/{account_id}')}</td>"
+            f"<td>{object_link(application['application_name'], f'/ui/application/{application_id}')}</td>"
+            f"<td>{object_link(entitlement['entitlement_name'], f'/ui/entitlement/{entitlement_id}')}</td>"
             f"<td>{badge(risk, 'risk-' + risk)}</td>"
             f"<td>{badge(assignment['assignment_status'], 'status-' + assignment['assignment_status'])}</td>"
             f"<td>{escape(str(assignment['assigned_by']))}</td>"
