@@ -1,15 +1,17 @@
 from __future__ import annotations
 
+from html import escape
 import time
 from typing import Any
 
 import httpx
 from fastapi import APIRouter, Form, HTTPException, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
-from auth import require_permission
+from auth import require_permission, require_ui_permission
 from management_routes import ACCESS_REQUESTS
 from repository import find_by_id, get_entitlements, get_identities
+from ui.components import badge, page_shell, table
 
 router = APIRouter(tags=["IGA Fulfillment"])
 
@@ -79,6 +81,54 @@ def provision_idp_assignment(username: str, app_role: str) -> dict[str, Any]:
     return payload
 
 
+@router.get("/ui/requests/access/fulfillment", response_class=HTMLResponse, response_model=None)
+def ui_fulfillment_queue(request: Request) -> Response:
+    result = require_ui_permission(request, "CREATE_RESOURCE_REQUEST")
+    if isinstance(result, RedirectResponse):
+        return result
+
+    rows: list[str] = []
+    for item in ACCESS_REQUESTS:
+        request_id = str(item["request_id"])
+        status = str(item["status"])
+        action = "-"
+        if status != "FULFILLED":
+            action = (
+                "<form method='post' action='/ui/requests/access/fulfill'>"
+                f"<input type='hidden' name='request_id' value='{escape(request_id)}' />"
+                "<button type='submit'>Fulfill to IdP</button>"
+                "</form>"
+            )
+        rows.append(
+            "<tr>"
+            f"<td>{escape(request_id)}</td>"
+            f"<td>{escape(str(item['target_identity_id']))}</td>"
+            f"<td>{escape(str(item['entitlement_id']))}</td>"
+            f"<td>{escape(str(item['access_type']))}</td>"
+            f"<td>{badge(status, 'status-' + status)}</td>"
+            f"<td>{escape(str(item.get('fulfilled_by', '-')))}</td>"
+            f"<td>{action}</td>"
+            "</tr>"
+        )
+
+    audit_rows = [
+        "<tr>"
+        f"<td>{escape(str(event['event_type']))}</td>"
+        f"<td>{escape(str(event['actor']))}</td>"
+        f"<td>{escape(str(event['request_id']))}</td>"
+        f"<td>{escape(str(event['detail']))}</td>"
+        f"<td>{escape(str(event['created_at']))}</td>"
+        "</tr>"
+        for event in FULFILLMENT_AUDIT
+    ]
+
+    body = "<h2 class='section-title'>Access Fulfillment Queue</h2>"
+    body += table(["Request", "Identity", "Entitlement", "Type", "Status", "Fulfilled By", "Action"], rows or ["<tr><td colspan='7'>No access requests available for fulfillment.</td></tr>"])
+    body += "<h2 class='section-title'>Fulfillment Audit</h2>"
+    body += table(["Event", "Actor", "Request", "Detail", "Time"], audit_rows or ["<tr><td colspan='5'>No fulfillment audit events yet.</td></tr>"])
+    return HTMLResponse(page_shell("Access Fulfillment", body, "Approve/fulfill IGA access requests into the IdP assignment model."))
+
+
 @router.post("/api/requests/access/{request_id}/fulfill")
 def api_fulfill_access_request(request: Request, request_id: str) -> dict[str, object]:
     actor = require_permission(request, "CREATE_RESOURCE_REQUEST")
@@ -97,7 +147,7 @@ def api_fulfill_access_request(request: Request, request_id: str) -> dict[str, o
 @router.post("/ui/requests/access/fulfill")
 def ui_fulfill_access_request(request: Request, request_id: str = Form(...)) -> RedirectResponse:
     api_fulfill_access_request(request, request_id)
-    return RedirectResponse(url="/ui/requests/access", status_code=303)
+    return RedirectResponse(url="/ui/requests/access/fulfillment", status_code=303)
 
 
 @router.get("/api/fulfillment/audit")
