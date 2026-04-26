@@ -2,12 +2,10 @@ from __future__ import annotations
 
 from html import escape
 
-from fastapi import APIRouter, Form, Request
+from fastapi import APIRouter, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
-from auth import REGISTERED_CLIENTS
-from repository import get_app_registrations, get_groups, get_identities
-from fastapi_app import badge, render_page, table
+from ui_components import badge, render_page, table
 
 router = APIRouter(tags=["IdP Management"])
 
@@ -76,7 +74,7 @@ def object_rows(objects: list[dict[str, object]], promote: bool) -> list[str]:
 
 
 @router.get("/ui/idp-management", response_class=HTMLResponse, response_model=None)
-def ui_idp_management(request: Request) -> Response:
+def ui_idp_management() -> Response:
     draft_rows = object_rows(DRAFT_OBJECTS, promote=True)
     promoted_rows = object_rows(PROMOTED_OBJECTS, promote=False)
     body = """
