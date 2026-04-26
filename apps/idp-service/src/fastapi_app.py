@@ -289,10 +289,18 @@ def ui_status() -> HTMLResponse:
 
 @app.get("/ui/identities", response_class=HTMLResponse)
 def ui_identities() -> HTMLResponse:
-    rows = [
-        f"<tr><td>{object_link(i['identity_id'], f'/ui/identity/{i['identity_id']}')}</td><td>{object_link(i['display_name'], f'/ui/identity/{i['identity_id']}')}</td><td>{escape(str(i['lan_id']))}</td><td>{escape(str(i['email']))}</td><td>{badge(i['identity_status'])}</td></tr>"
-        for i in get_identities()
-    ]
+    rows = []
+    for i in get_identities():
+        identity_href = f"/ui/identity/{i['identity_id']}"
+        rows.append(
+            "<tr>"
+            f"<td>{object_link(i['identity_id'], identity_href)}</td>"
+            f"<td>{object_link(i['display_name'], identity_href)}</td>"
+            f"<td>{escape(str(i['lan_id']))}</td>"
+            f"<td>{escape(str(i['email']))}</td>"
+            f"<td>{badge(i['identity_status'])}</td>"
+            "</tr>"
+        )
     return render_page("Users", table(["ID", "Name", "LAN ID", "Email", "Status"], rows), "Directory users with profile drill-down.")
 
 
