@@ -69,6 +69,20 @@ def map_role(idp_role: str) -> str:
     return ROLE_MAPPING.get(idp_role, "ZSP_VIEWER")
 
 
+def derive_app_role(claims: dict[str, Any], idp_role: str) -> str:
+    explicit_app_role = claims.get("app_role")
+    if isinstance(explicit_app_role, str) and explicit_app_role in APP_PERMISSIONS:
+        return explicit_app_role
+
+    app_roles = claims.get("app_roles")
+    if isinstance(app_roles, dict):
+        assigned_role = app_roles.get(CLIENT_ID)
+        if isinstance(assigned_role, str) and assigned_role in APP_PERMISSIONS:
+            return assigned_role
+
+    return map_role(idp_role)
+
+
 def audit(event_type: str, actor: str, detail: str, metadata: dict[str, Any] | None = None) -> None:
     AUDIT_EVENTS.insert(
         0,
@@ -86,10 +100,12 @@ def audit(event_type: str, actor: str, detail: str, metadata: dict[str, Any] | N
 def jit_provision_user(claims: dict[str, Any]) -> LocalUser:
     username = str(claims.get("preferred_username") or claims.get("sub") or "unknown")
     idp_role = str(claims.get("role") or "READ_ONLY")
-    app_role = map_role(idp_role)
+    app_role = derive_app_role(claims, idp_role)
 
     existing = LOCAL_USERS.get(username)
     if existing:
+        existing.idp_role = idp_role
+        existing.app_role = app_role
         existing.last_login_at = time.time()
         audit("USER_LOGIN", username, "Existing local account signed in through IdP", {"app_role": existing.app_role})
         return existing
