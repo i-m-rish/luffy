@@ -7,6 +7,7 @@ from fastapi.responses import HTMLResponse
 
 from auth import ACCESS_TOKENS, AUTHORIZATION_CODES, IDP_USERS, REGISTERED_CLIENTS
 from auth_routes import router as auth_router
+from management_routes import router as management_router
 from repository import (
     get_app_assignments,
     get_app_registrations,
@@ -24,6 +25,7 @@ app = FastAPI(
     version="0.3.0",
 )
 app.include_router(auth_router)
+app.include_router(management_router)
 
 
 def badge(text: object, css_class: str = "") -> str:
@@ -58,7 +60,7 @@ def render_page(title: str, body: str, subtitle: str = "") -> HTMLResponse:
           * {{ box-sizing:border-box; }}
           body {{ font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; margin:0; background:var(--bg); color:var(--ink); }}
           .layout {{ min-height:100vh; display:grid; grid-template-columns:290px 1fr; }}
-          aside {{ background:linear-gradient(180deg,#111827,#172554 70%,#312e81); color:white; padding:24px 18px; position:sticky; top:0; height:100vh; }}
+          aside {{ background:linear-gradient(180deg,#111827,#172554 70%,#312e81); color:white; padding:24px 18px; position:sticky; top:0; height:100vh; overflow:auto; }}
           .brand {{ display:flex; gap:12px; align-items:center; margin-bottom:22px; }}
           .brand-mark {{ width:42px; height:42px; border-radius:14px; display:grid; place-items:center; background:linear-gradient(135deg,#60a5fa,#a78bfa); font-weight:900; }}
           .brand small {{ display:block; color:#bfdbfe; }}
@@ -71,7 +73,11 @@ def render_page(title: str, body: str, subtitle: str = "") -> HTMLResponse:
           .topbar {{ display:flex; gap:14px; align-items:center; justify-content:space-between; }}
           .search-box {{ display:flex; gap:8px; flex:1; max-width:680px; }}
           .search-box input {{ width:100%; padding:11px 12px; border:1px solid #cbd5e1; border-radius:12px; background:white; }}
-          .search-box button, .button {{ border:0; background:var(--accent); color:white; padding:10px 14px; border-radius:12px; font-weight:800; text-decoration:none; cursor:pointer; }}
+          .search-box button, .button, button {{ border:0; background:var(--accent); color:white; padding:10px 14px; border-radius:12px; font-weight:800; text-decoration:none; cursor:pointer; }}
+          input, select, textarea {{ width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:12px; background:white; }}
+          textarea {{ min-height:88px; }}
+          label {{ font-weight:800; font-size:13px; color:#334155; }}
+          .form-card {{ display:grid; gap:12px; max-width:760px; }}
           .session-card {{ background:white; border:1px solid var(--line); border-radius:14px; padding:9px 12px; font-size:13px; color:#334155; }}
           .eyebrow {{ color:#1d4ed8; letter-spacing:.12em; text-transform:uppercase; font-weight:900; font-size:12px; margin-top:20px; }}
           h1 {{ margin:8px 0 0; font-size:32px; }}
@@ -93,8 +99,8 @@ def render_page(title: str, body: str, subtitle: str = "") -> HTMLResponse:
           a {{ color:#1d4ed8; }}
           .badge {{ display:inline-block; padding:4px 9px; border-radius:999px; background:#e5e7eb; font-size:12px; font-weight:800; }}
           .risk-HIGH,.risk-CRITICAL,.status-failure {{ background:#fee2e2; color:#991b1b; }}
-          .risk-MEDIUM {{ background:#fef3c7; color:#92400e; }}
-          .risk-LOW,.status-operational,.status-success {{ background:#dcfce7; color:#166534; }}
+          .risk-MEDIUM,.status-VALIDATED_WITH_WARNINGS {{ background:#fef3c7; color:#92400e; }}
+          .risk-LOW,.status-operational,.status-success,.status-VALIDATED,.status-PROMOTED_TO_ACTIVE {{ background:#dcfce7; color:#166534; }}
           @media(max-width:900px) {{ .layout {{ grid-template-columns:1fr; }} aside {{ position:relative; height:auto; }} nav {{ flex-direction:row; flex-wrap:wrap; }} .topbar {{ flex-direction:column; align-items:stretch; }} }}
         </style>
       </head>
@@ -107,6 +113,7 @@ def render_page(title: str, body: str, subtitle: str = "") -> HTMLResponse:
               <a href="/ui">Dashboard <span class="nav-pill">Home</span></a>
               <a href="/ui/status">Tenant Status <span class="nav-pill">Health</span></a>
               <a href="/ui/search">Global Search <span class="nav-pill">Find</span></a>
+              <a href="/ui/idp-management">Draft Management <span class="nav-pill">Sandbox</span></a>
               <div class="side-section">Identity</div>
               <a href="/ui/identities">Users <span class="nav-pill">People</span></a>
               <a href="/ui/groups">Groups <span class="nav-pill">RBAC</span></a>
@@ -138,7 +145,7 @@ def render_page(title: str, body: str, subtitle: str = "") -> HTMLResponse:
                 <span class="status-chip">OIDC demo flow</span>
                 <span class="status-chip">Enterprise app assignments</span>
                 <span class="status-chip">OAuth clients</span>
-                <span class="status-chip">Audit/log workspaces</span>
+                <span class="status-chip">Draft promotion</span>
               </div>
             </header>
             <main>{body}</main>
