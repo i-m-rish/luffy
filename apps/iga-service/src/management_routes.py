@@ -23,6 +23,7 @@ CERTIFICATION_CAMPAIGNS: list[dict[str, object]] = [
 ]
 MANAGED_IDENTITIES: list[dict[str, object]] = []
 MANAGED_SOURCES: list[dict[str, object]] = []
+ACCESS_REQUESTS: list[dict[str, object]] = []
 
 
 def object_link(label: object, href: str) -> str:
@@ -36,13 +37,103 @@ def admin_redirect(request: Request) -> RedirectResponse | None:
     return None
 
 
+def render_options(records: list[dict[str, object]], value_key: str, label_key: str, secondary_key: str | None = None) -> str:
+    parts = []
+    for record in records:
+        value = str(record[value_key])
+        label = str(record[label_key])
+        if secondary_key:
+            label = f"{label} / {record[secondary_key]}"
+        parts.append(f"<option value='{escape(value)}'>{escape(label)}</option>")
+    return "".join(parts)
+
+
 @router.get("/ui/search", response_class=HTMLResponse, response_model=None)
 def ui_search(request: Request, q: str = Query(default="")) -> Response:
     result = require_ui_permission(request, "VIEW_DASHBOARD")
     if isinstance(result, RedirectResponse):
         return result
-    rows = [f"<tr><td>{badge(item['type'])}</td><td>{object_link(item['name'], item['href'])}</td><td>{escape(item['id'])}</td></tr>" for item in governance_service.search(q)]
+    rows = [
+        f"<tr><td>{badge(item['type'])}</td><td>{object_link(item['name'], item['href'])}</td><td>{escape(item['id'])}</td></tr>"
+        for item in governance_service.search(q)
+    ]
     return HTMLResponse(page_shell("Global Search", table(["Type", "Name", "Object ID"], rows or ["<tr><td colspan='3'>Enter a search term.</td></tr>"]), f"Search results for: {q}" if q else "Search identities, sources, accounts, and entitlements."))
+
+
+@router.get("/ui/requests/access", response_class=HTMLResponse, response_model=None)
+def ui_access_requests(request: Request) -> Response:
+    result = require_ui_permission(request, "VIEW_DASHBOARD")
+    if isinstance(result, RedirectResponse):
+        return result
+
+    identity_options = render_options(governance_service.identities(), "identity_id", "display_name", "identity_id")
+    entitlement_options = render_options(governance_service.entitlements(), "entitlement_id", "entitlement_name", "application_id")
+    rows = []
+    for item in ACCESS_REQUESTS:
+        identity_id = str(item["target_identity_id"])
+        entitlement_id = str(item["entitlement_id"])
+        rows.append(
+            "<tr>"
+            f"<td>{escape(str(item['request_id']))}</td>"
+            f"<td>{escape(str(item['requester']))}</td>"
+            f"<td>{object_link(identity_id, f'/ui/identity/{identity_id}/access')}</td>"
+            f"<td>{object_link(entitlement_id, f'/ui/entitlement/{entitlement_id}')}</td>"
+            f"<td>{escape(str(item['access_type']))}</td>"
+            f"<td>{badge(item['status'], 'status-' + str(item['status']))}</td>"
+            f"<td>{escape(str(item['justification']))}</td>"
+            "</tr>"
+        )
+    form = f"""
+    <div class='card'><h2 style='margin-top:0'>Create Access Request</h2>
+    <form class='form-card' method='post' action='/ui/requests/access'>
+      <label>Target Identity</label><select name='target_identity_id'>{identity_options}</select>
+      <label>Requested Entitlement</label><select name='entitlement_id'>{entitlement_options}</select>
+      <label>Access Type</label><select name='access_type'><option>ADD_ACCESS</option><option>REMOVE_ACCESS</option><option>MODIFY_ACCESS</option></select>
+      <label>Business Justification</label><textarea name='justification' required></textarea>
+      <button type='submit'>Submit access request</button>
+    </form></div>
+    """
+    body = form + "<h2 class='section-title'>Access Request Queue</h2>" + table(["Request", "Requester", "Identity", "Entitlement", "Type", "Status", "Justification"], rows or ["<tr><td colspan='7'>No access requests yet.</td></tr>"])
+    return HTMLResponse(page_shell("Access Request", body, "Request, remove, or modify access like a SailPoint request center."))
+
+
+@router.post("/ui/requests/access")
+def ui_create_access_request(request: Request, target_identity_id: str = Form(...), entitlement_id: str = Form(...), access_type: str = Form(...), justification: str = Form(...)) -> RedirectResponse:
+    user = require_permission(request, "CREATE_RESOURCE_REQUEST")
+    item = {
+        "request_id": f"AR-{len(ACCESS_REQUESTS) + 1:04d}",
+        "requester": user.username,
+        "target_identity_id": target_identity_id,
+        "entitlement_id": entitlement_id,
+        "access_type": access_type,
+        "justification": justification,
+        "status": "SUBMITTED",
+    }
+    ACCESS_REQUESTS.insert(0, item)
+    governance_service.create_resource_request(user.username, access_type, "Entitlement", entitlement_id, f"{target_identity_id}: {justification}")
+    return RedirectResponse(url="/ui/requests/access", status_code=303)
+
+
+@router.get("/api/requests/access")
+def api_access_requests(request: Request) -> list[dict[str, object]]:
+    require_permission(request, "VIEW_DASHBOARD")
+    return ACCESS_REQUESTS
+
+
+@router.post("/api/requests/access")
+def api_create_access_request(request: Request, target_identity_id: str = Form(...), entitlement_id: str = Form(...), access_type: str = Form(...), justification: str = Form(...)) -> dict[str, object]:
+    user = require_permission(request, "CREATE_RESOURCE_REQUEST")
+    item = {
+        "request_id": f"AR-{len(ACCESS_REQUESTS) + 1:04d}",
+        "requester": user.username,
+        "target_identity_id": target_identity_id,
+        "entitlement_id": entitlement_id,
+        "access_type": access_type,
+        "justification": justification,
+        "status": "SUBMITTED",
+    }
+    ACCESS_REQUESTS.insert(0, item)
+    return item
 
 
 @router.get("/ui/requests/resources", response_class=HTMLResponse, response_model=None)
@@ -54,7 +145,7 @@ def ui_resource_requests(request: Request) -> Response:
     form = """
     <div class='card'><h2 style='margin-top:0'>Create Resource Request</h2>
     <form class='form-card' method='post' action='/ui/requests/resources'>
-      <label>Request Type</label><select name='request_type'><option>ACCESS_REQUEST</option><option>CREATE_SOURCE</option><option>CREATE_ENTITLEMENT</option><option>DEPROVISION_ACCESS</option></select>
+      <label>Request Type</label><select name='request_type'><option>CREATE_SOURCE</option><option>CREATE_ENTITLEMENT</option><option>DEPROVISION_ACCESS</option></select>
       <label>Target Type</label><select name='target_type'><option>Identity</option><option>Source</option><option>Account</option><option>Entitlement</option></select>
       <label>Target ID</label><input name='target_id' required />
       <label>Justification</label><textarea name='justification' required></textarea>
@@ -62,7 +153,7 @@ def ui_resource_requests(request: Request) -> Response:
     </form></div>
     """
     body = form + "<h2 class='section-title'>Request Queue</h2>" + table(["Request", "Requester", "Type", "Target Type", "Target", "Status", "Justification"], rows or ["<tr><td colspan='7'>No requests yet.</td></tr>"])
-    return HTMLResponse(page_shell("Request Center", body, "Create and track resource requests."))
+    return HTMLResponse(page_shell("Resource Request Center", body, "Create and track non-access resource requests."))
 
 
 @router.post("/ui/requests/resources")
