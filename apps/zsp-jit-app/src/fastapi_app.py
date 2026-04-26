@@ -30,6 +30,20 @@ app = FastAPI(
     version="0.1.0",
 )
 
+APP_ROLE_TO_IDP_ROLE = {
+    "ZSP_ADMIN": "IGA_ADMIN",
+    "ZSP_APPROVER": "ACCESS_REVIEWER",
+    "ZSP_OPERATOR": "APP_OWNER",
+    "ZSP_VIEWER": "READ_ONLY",
+}
+
+
+def normalize_zsp_claims(claims: dict[str, object]) -> dict[str, object]:
+    app_role = claims.get("app_role")
+    if isinstance(app_role, str) and app_role in APP_ROLE_TO_IDP_ROLE:
+        claims["role"] = APP_ROLE_TO_IDP_ROLE[app_role]
+    return claims
+
 
 def current_user(request: Request):
     return get_user_from_session(request.cookies.get(SESSION_COOKIE_NAME))
@@ -145,6 +159,7 @@ def auth_callback(request: Request, code: str = Query(...), state: str = Query(d
     claims = token_response.json().get("claims")
     if not isinstance(claims, dict):
         raise HTTPException(status_code=401, detail="Token response did not include claims")
+    claims = normalize_zsp_claims(claims)
 
     user = jit_provision_user(claims)
     session_id = create_session(user.username)
