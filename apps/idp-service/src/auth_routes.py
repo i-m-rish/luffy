@@ -5,6 +5,7 @@ from urllib.parse import urlencode
 from fastapi import APIRouter, Form, HTTPException, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
+from access_model import assign_app_role, list_app_role_assignments, remove_app_role
 from auth import (
     ACCESS_TOKENS,
     AUTHORIZATION_CODES,
@@ -22,8 +23,15 @@ EXTRA_CLIENTS = {
     "luffy-zsp": {
         "client_name": "Secure Operations Portal",
         "redirect_uri": "http://127.0.0.1:8003/auth/callback",
-        "allowed_roles": ["IGA_ADMIN", "ACCESS_REVIEWER", "APP_OWNER", "READ_ONLY"],
+        "allowed_roles": ["ZSP_ADMIN", "ZSP_APPROVER", "ZSP_OPERATOR", "ZSP_VIEWER"],
     }
+}
+
+ZSP_TO_IDP_ROLE = {
+    "ZSP_ADMIN": "IGA_ADMIN",
+    "ZSP_APPROVER": "ACCESS_REVIEWER",
+    "ZSP_OPERATOR": "APP_OWNER",
+    "ZSP_VIEWER": "READ_ONLY",
 }
 
 
@@ -34,6 +42,32 @@ def effective_clients() -> dict[str, dict[str, object]]:
 def validate_effective_client(client_id: str, redirect_uri: str) -> bool:
     client = effective_clients().get(client_id)
     return client is not None and client["redirect_uri"] == redirect_uri
+
+
+def apply_app_assignment_claims(token_response: dict[str, object], client_id: str) -> dict[str, object]:
+    claims = token_response.get("claims")
+    if not isinstance(claims, dict):
+        return token_response
+
+    username = str(claims.get("preferred_username") or claims.get("sub") or "")
+    app_roles = {
+        row["client_id"]: row["app_role"]
+        for row in list_app_role_assignments()
+        if row["username"] == username
+    }
+    claims["app_roles"] = app_roles
+
+    assigned_role = app_roles.get(client_id)
+    if assigned_role:
+        claims["app_role"] = assigned_role
+        if client_id == "luffy-zsp":
+            claims["role"] = ZSP_TO_IDP_ROLE.get(assigned_role, "READ_ONLY")
+
+    access_token = token_response.get("access_token")
+    if isinstance(access_token, str) and access_token in ACCESS_TOKENS:
+        ACCESS_TOKENS[access_token]["claims"] = claims
+    token_response["claims"] = claims
+    return token_response
 
 
 def login_page(client_id: str, redirect_uri: str, state: str, error: str = "") -> str:
@@ -100,7 +134,7 @@ def openid_configuration() -> dict[str, object]:
         "userinfo_endpoint": "http://127.0.0.1:8002/oauth/userinfo",
         "response_types_supported": ["code"],
         "grant_types_supported": ["authorization_code"],
-        "claims_supported": ["sub", "preferred_username", "name", "email", "role"],
+        "claims_supported": ["sub", "preferred_username", "name", "email", "role", "app_role", "app_roles"],
         "scopes_supported": ["openid", "profile", "email"],
     }
 
@@ -132,25 +166,33 @@ def oauth_clients() -> list[dict[str, object]]:
     ]
 
 
+@router.get("/api/access/assignments")
+def api_access_assignments() -> list[dict[str, object]]:
+    return list_app_role_assignments()
+
+
+@router.post("/api/access/assignments")
+def api_assign_access(username: str = Form(...), client_id: str = Form(...), app_role: str = Form(...)) -> dict[str, object]:
+    try:
+        return assign_app_role(username, client_id, app_role)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.delete("/api/access/assignments")
+def api_remove_access(username: str = Form(...), client_id: str = Form(...)) -> dict[str, object]:
+    return remove_app_role(username, client_id)
+
+
 @router.get("/oauth/authorize", response_class=HTMLResponse)
-def authorize_form(
-    client_id: str = Query(...),
-    redirect_uri: str = Query(...),
-    state: str = Query(default=""),
-) -> HTMLResponse:
+def authorize_form(client_id: str = Query(...), redirect_uri: str = Query(...), state: str = Query(default="")) -> HTMLResponse:
     if not validate_effective_client(client_id, redirect_uri):
         raise HTTPException(status_code=400, detail="Invalid client_id or redirect_uri")
     return HTMLResponse(login_page(client_id, redirect_uri, state))
 
 
 @router.post("/oauth/authorize", response_model=None)
-def authorize_submit(
-    client_id: str = Form(...),
-    redirect_uri: str = Form(...),
-    state: str = Form(default=""),
-    username: str = Form(...),
-    password: str = Form(...),
-) -> Response:
+def authorize_submit(client_id: str = Form(...), redirect_uri: str = Form(...), state: str = Form(default=""), username: str = Form(...), password: str = Form(...)) -> Response:
     if not validate_effective_client(client_id, redirect_uri):
         raise HTTPException(status_code=400, detail="Invalid client_id or redirect_uri")
 
@@ -164,15 +206,11 @@ def authorize_submit(
 
 
 @router.post("/oauth/token")
-def token(
-    code: str = Form(...),
-    client_id: str = Form(...),
-    redirect_uri: str = Form(...),
-) -> dict[str, object]:
+def token(code: str = Form(...), client_id: str = Form(...), redirect_uri: str = Form(...)) -> dict[str, object]:
     token_response = exchange_code_for_token(code, client_id, redirect_uri)
     if token_response is None:
         raise HTTPException(status_code=400, detail="Invalid or expired authorization code")
-    return token_response
+    return apply_app_assignment_claims(token_response, client_id)
 
 
 @router.get("/oauth/userinfo")
